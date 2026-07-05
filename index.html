@@ -2,38 +2,133 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Pile à Livres</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Ma Pile à Livres</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<header>
-    <h1>Ma Pile à Livres</h1>
-</header>
+    <!-- PARTICULES FOND -->
+    <div class="particles" id="particles"></div>
 
-<section class="presentation">
-    <img src="images/pile-livres.jpg" alt="Pile à livres">
-    <div class="description">
-        <h2>Description</h2>
-        <p>
-            Cette pile à livres représente un ensemble de romans, bandes dessinées 
-            et ouvrages éducatifs soigneusement empilés. Elle symbolise la connaissance,
-            l’imagination et la curiosité.
-        </p>
+    <!-- HEADER -->
+    <header>
+        <div class="logo">📚</div>
+        <h1>Ma Pile à Livres</h1>
+        <p class="subtitle">Organise tes lectures, découvre ton prochain livre !</p>
+    </header>
 
-        <h3>Caractéristiques :</h3>
-        <ul>
-            <li>📚 10 livres</li>
-            <li>📖 Genres variés</li>
-            <li>🎨 Couvertures colorées</li>
-            <li>📏 Hauteur : 35 cm</li>
-        </ul>
+    <!-- STATS -->
+    <section class="stats-bar">
+        <div class="stat">
+            <span class="stat-number" id="totalBooks">0</span>
+            <span class="stat-label">Total</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number" id="toReadBooks">0</span>
+            <span class="stat-label">À lire</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number" id="readBooks">0</span>
+            <span class="stat-label">Lus</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number" id="avgRating">-</span>
+            <span class="stat-label">Note moy.</span>
+        </div>
+    </section>
+
+    <!-- FORMULAIRE AJOUT -->
+    <section class="add-section">
+        <h2>➕ Ajouter un livre</h2>
+        <form id="addBookForm">
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="bookTitle">Titre</label>
+                    <input type="text" id="bookTitle" placeholder="Ex : Le Petit Prince" required>
+                </div>
+                <div class="input-group">
+                    <label for="bookAuthor">Auteur</label>
+                    <input type="text" id="bookAuthor" placeholder="Ex : Saint-Exupéry" required>
+                </div>
+                <div class="input-group">
+                    <label for="bookGenre">Genre</label>
+                    <select id="bookGenre">
+                        <option value="Roman">📖 Roman</option>
+                        <option value="SF">🚀 Science-Fiction</option>
+                        <option value="Fantasy">🐉 Fantasy</option>
+                        <option value="Thriller">🔪 Thriller</option>
+                        <option value="BD">🎨 BD / Manga</option>
+                        <option value="Essai">📝 Essai</option>
+                        <option value="Poésie">🌸 Poésie</option>
+                        <option value="Histoire">🏛️ Histoire</option>
+                        <option value="Dev perso">🧠 Dév. personnel</option>
+                        <option value="Autre">📦 Autre</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-add">
+                <span>📥</span> Ajouter à la pile
+            </button>
+        </form>
+    </section>
+
+    <!-- SELECTION ALEATOIRE -->
+    <section class="random-section">
+        <h2>🎲 Quel livre lire ?</h2>
+        <p>Laisse le hasard décider pour toi !</p>
+        <div class="random-filter">
+            <label>Filtrer par genre :</label>
+            <select id="randomGenreFilter">
+                <option value="all">Tous les genres</option>
+            </select>
+        </div>
+        <button class="btn btn-random" id="randomBtn" onclick="pickRandomBook()">
+            🎰 Choisir un livre au hasard
+        </button>
+        <div class="random-result" id="randomResult"></div>
+    </section>
+
+    <!-- FILTRES -->
+    <section class="filter-section">
+        <h2>📋 Ma bibliothèque</h2>
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterBooks('all', this)">📚 Tous</button>
+            <button class="filter-btn" onclick="filterBooks('toRead', this)">📖 À lire</button>
+            <button class="filter-btn" onclick="filterBooks('read', this)">✅ Lus</button>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Rechercher un livre..." oninput="renderBooks()">
+        </div>
+    </section>
+
+    <!-- LISTE DES LIVRES -->
+    <section class="books-list" id="booksList"></section>
+
+    <!-- MODAL NOTATION -->
+    <div class="modal-overlay" id="ratingModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeRatingModal()">✕</button>
+            <h2>⭐ Noter ce livre</h2>
+            <p class="modal-book-title" id="modalBookTitle"></p>
+            <div class="stars-input" id="starsInput">
+                <span class="star-btn" onclick="setRating(1)">★</span>
+                <span class="star-btn" onclick="setRating(2)">★</span>
+                <span class="star-btn" onclick="setRating(3)">★</span>
+                <span class="star-btn" onclick="setRating(4)">★</span>
+                <span class="star-btn" onclick="setRating(5)">★</span>
+            </div>
+            <textarea id="bookReview" placeholder="Ton avis en quelques mots (optionnel)..."></textarea>
+            <button class="btn btn-confirm" onclick="confirmRating()">✅ Confirmer</button>
+        </div>
     </div>
-</section>
 
-<footer>
-    <p>Projet réalisé en HTML & CSS - 2026</p>
-</footer>
+    <!-- FOOTER -->
+    <footer>
+        <p>📚 Ma Pile à Livres — Fait avec ❤️ en HTML, CSS & JS — 2025</p>
+    </footer>
 
+    <script src="script.js"></script>
 </body>
 </html>
