@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBookForm').addEventListener('submit', addBook);
 });
 
+
 // ===== PARTICULES DE FOND =====
 function createParticles() {
     const container = document.getElementById('particles');
