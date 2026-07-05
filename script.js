@@ -4,8 +4,16 @@ let currentFilter = 'all';
 let ratingBookId = null;
 let selectedRating = 0;
 
+// ===== SETTINGS =====
+let settings = JSON.parse(localStorage.getItem('myBookPileSettings')) || {
+    theme: 'purple',
+    particles: true,
+    animations: true
+};
+
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', () => {
+    applySettings();
     createParticles();
     renderBooks();
     updateStats();
@@ -14,8 +22,140 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBookForm').addEventListener('submit', addBook);
 });
 
+// ===== APPLIQUER SETTINGS =====
+function applySettings() {
+    // Thème
+    document.documentElement.setAttribute('data-theme', settings.theme);
+    updateActiveThemeCard();
 
-// ===== PARTICULES DE FOND =====
+    // Particules
+    document.getElementById('toggleParticles').checked = settings.particles;
+    const particlesEl = document.getElementById('particles');
+    if (settings.particles) {
+        particlesEl.classList.remove('hidden');
+    } else {
+        particlesEl.classList.add('hidden');
+    }
+
+    // Animations
+    document.getElementById('toggleAnimations').checked = settings.animations;
+    if (settings.animations) {
+        document.body.classList.remove('no-animations');
+    } else {
+        document.body.classList.add('no-animations');
+    }
+}
+
+function saveSettings() {
+    localStorage.setItem('myBookPileSettings', JSON.stringify(settings));
+}
+
+// ===== NAVIGATION ONGLETS =====
+function switchTab(tab, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    document.getElementById('page-' + tab).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ===== THÈMES =====
+function setTheme(theme) {
+    settings.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    updateActiveThemeCard();
+    saveSettings();
+    showToast(`🎨 Thème "${theme}" appliqué !`);
+}
+
+function updateActiveThemeCard() {
+    document.querySelectorAll('.theme-card').forEach(card => {
+        card.classList.remove('active');
+        if (card.getAttribute('data-theme-btn') === settings.theme) {
+            card.classList.add('active');
+        }
+    });
+}
+
+// ===== TOGGLES =====
+function toggleParticles() {
+    settings.particles = document.getElementById('toggleParticles').checked;
+    const particlesEl = document.getElementById('particles');
+    if (settings.particles) {
+        particlesEl.classList.remove('hidden');
+    } else {
+        particlesEl.classList.add('hidden');
+    }
+    saveSettings();
+}
+
+function toggleAnimations() {
+    settings.animations = document.getElementById('toggleAnimations').checked;
+    if (settings.animations) {
+        document.body.classList.remove('no-animations');
+    } else {
+        document.body.classList.add('no-animations');
+    }
+    saveSettings();
+}
+
+// ===== EXPORT / IMPORT =====
+function exportData() {
+    const data = {
+        books: books,
+        settings: settings
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ma-pile-a-livres.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📤 Données exportées !');
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.books && Array.isArray(data.books)) {
+                books = data.books;
+                saveBooks();
+                renderBooks();
+                updateStats();
+                updateRandomGenreFilter();
+            }
+            if (data.settings) {
+                settings = { ...settings, ...data.settings };
+                saveSettings();
+                applySettings();
+            }
+            showToast('📥 Données importées avec succès !');
+        } catch (err) {
+            showToast('❌ Fichier invalide !');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+function clearAllData() {
+    if (confirm('⚠️ Supprimer TOUS les livres ? Cette action est irréversible.')) {
+        books = [];
+        saveBooks();
+        renderBooks();
+        updateStats();
+        updateRandomGenreFilter();
+        showToast('🗑️ Toutes les données ont été supprimées.');
+    }
+}
+
+// ===== PARTICULES =====
 function createParticles() {
     const container = document.getElementById('particles');
     for (let i = 0; i < 50; i++) {
@@ -88,7 +228,6 @@ function renderBooks() {
         return;
     }
 
-    // Tri : à lire d'abord, puis lus par note décroissante
     filtered.sort((a, b) => {
         if (a.status === 'toRead' && b.status === 'read') return -1;
         if (a.status === 'read' && b.status === 'toRead') return 1;
@@ -120,13 +259,13 @@ function renderBooks() {
                 ${reviewHtml}
                 <div class="actions">
                     ${book.status === 'toRead'
-                ? `<button class="btn-mark-read" onclick="markAsRead(${book.id})">✅ Marquer lu</button>`
-                : `<button class="btn-unread" onclick="markAsUnread(${book.id})">📖 Remettre à lire</button>`
-            }
+                        ? `<button class="btn-mark-read" onclick="markAsRead(${book.id})">✅ Marquer lu</button>`
+                        : `<button class="btn-unread" onclick="markAsUnread(${book.id})">📖 Remettre à lire</button>`
+                    }
                     ${book.status === 'read'
-                ? `<button class="btn-rate" onclick="openRatingModal(${book.id})">⭐ ${book.rating > 0 ? 'Modifier note' : 'Noter'}</button>`
-                : ''
-            }
+                        ? `<button class="btn-rate" onclick="openRatingModal(${book.id})">⭐ ${book.rating > 0 ? 'Modifier note' : 'Noter'}</button>`
+                        : ''
+                    }
                 </div>
             </div>
         `;
@@ -136,10 +275,8 @@ function renderBooks() {
 // ===== FILTRES =====
 function filterBooks(filter, btn) {
     currentFilter = filter;
-
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-
     renderBooks();
 }
 
@@ -153,8 +290,6 @@ function markAsRead(id) {
         renderBooks();
         updateStats();
         showToast(`✅ "${book.title}" marqué comme lu !`);
-
-        // Ouvrir directement la modal de notation
         setTimeout(() => openRatingModal(id), 400);
     }
 }
@@ -197,12 +332,10 @@ function openRatingModal(id) {
     document.getElementById('modalBookTitle').textContent = book.title;
     document.getElementById('bookReview').value = book.review || '';
 
-    // Pré-remplir les étoiles si déjà noté
     if (book.rating > 0) {
         selectedRating = book.rating;
     }
     updateStarsDisplay();
-
     document.getElementById('ratingModal').classList.add('active');
 }
 
@@ -220,11 +353,7 @@ function setRating(n) {
 function updateStarsDisplay() {
     const stars = document.querySelectorAll('.star-btn');
     stars.forEach((star, i) => {
-        if (i < selectedRating) {
-            star.classList.add('active');
-        } else {
-            star.classList.remove('active');
-        }
+        star.classList.toggle('active', i < selectedRating);
     });
 }
 
@@ -243,7 +372,6 @@ function confirmRating() {
         updateStats();
         showToast(`⭐ "${book.title}" noté ${selectedRating}/5 !`);
     }
-
     closeRatingModal();
 }
 
@@ -269,7 +397,6 @@ function pickRandomBook() {
         return;
     }
 
-    // Animation de roulette
     btn.disabled = true;
     btn.textContent = '🎰 Sélection en cours...';
 
@@ -302,7 +429,7 @@ function pickRandomBook() {
     }, 100);
 }
 
-// ===== MISE À JOUR FILTRE GENRE (RANDOM) =====
+// ===== GENRE FILTER (RANDOM) =====
 function updateRandomGenreFilter() {
     const select = document.getElementById('randomGenreFilter');
     const genres = [...new Set(books.filter(b => b.status === 'toRead').map(b => b.genre))];
@@ -342,6 +469,5 @@ function showToast(message) {
     toast.classList.add('toast');
     toast.textContent = message;
     document.body.appendChild(toast);
-
     setTimeout(() => toast.remove(), 3000);
 }
