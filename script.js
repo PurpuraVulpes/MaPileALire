@@ -317,7 +317,12 @@ function getFormatHtml(format) {
     return '<span class="format-tag format-' + cls + '">' + icon + ' ' + format + '</span>';
 }
 
-var SOURCE_ICONS = { 'Bibliothèque': '🏛️', 'Internet': '💻', 'École': '🎓' };
+var SOURCE_ICONS = { 
+    'Bibliothèque': '🏛️', 
+    'Internet': '💻', 
+    'École': '🎓',
+    'Ma collection': '📚'
+};
 
 // BIBLIOTHÈQUE
 function addBook(e) {
@@ -608,9 +613,9 @@ function renderExternal() {
     for (var i = 0; i < external.length; i++) {
         var e = external[i];
         var mf = extFilter === 'all' ||
-            (extFilter === 'read' && e.status === 'read') ||
-            (extFilter === 'toRead' && e.status === 'toRead') ||
             (extFilter === 'returned' && e.status === 'returned') ||
+            (extFilter === 'given' && e.status === 'given') ||
+            (extFilter === 'kept' && e.status === 'kept') ||
             (extFilter === 'wantToBuy' && e.wantToBuy);
         var ms = e.title.toLowerCase().indexOf(query) !== -1 || e.author.toLowerCase().indexOf(query) !== -1 ||
             (e.genre && e.genre.toLowerCase().indexOf(query) !== -1) ||
@@ -627,16 +632,18 @@ function renderExternal() {
             case 'source': return (a.source || '').localeCompare(b.source || '');
             case 'dateAdded': return b.id - a.id;
             default:
-                var order = { 'toRead': 0, 'read': 1, 'returned': 2 };
+                var order = { 'returned': 0, 'given': 1, 'kept': 2 };
                 return (order[a.status] || 99) - (order[b.status] || 99);
         }
     });
 
-    var readCount = 0, ratedSum = 0, ratedCount = 0, toBuyCount = 0, returnedCount = 0, tomesCount = 0;
+    // Stats
+    var ratedSum = 0, ratedCount = 0, toBuyCount = 0, returnedCount = 0, givenCount = 0, keptCount = 0, tomesCount = 0;
     var extSeriesSet = {};
     for (var s = 0; s < external.length; s++) {
-        if (external[s].status === 'read') readCount++;
         if (external[s].status === 'returned') returnedCount++;
+        if (external[s].status === 'given') givenCount++;
+        if (external[s].status === 'kept') keptCount++;
         if (external[s].rating > 0) { ratedSum += external[s].rating; ratedCount++; }
         if (external[s].wantToBuy) toBuyCount++;
         if (external[s].series && external[s].series.trim()) {
@@ -647,11 +654,14 @@ function renderExternal() {
     var extSagasNb = Object.keys(extSeriesSet).length;
 
     document.getElementById('extTotal').textContent = external.length;
-    document.getElementById('extRead').textContent = readCount;
     document.getElementById('extToBuy').textContent = toBuyCount;
     document.getElementById('extAvgRating').textContent = ratedCount > 0 ? (ratedSum / ratedCount).toFixed(1) : '-';
     var extReturnedEl = document.getElementById('extReturned');
     if (extReturnedEl) extReturnedEl.textContent = returnedCount;
+    var extGivenEl = document.getElementById('extGiven');
+    if (extGivenEl) extGivenEl.textContent = givenCount;
+    var extKeptEl = document.getElementById('extKept');
+    if (extKeptEl) extKeptEl.textContent = keptCount;
     var extSagasEl = document.getElementById('extSagasCount');
     if (extSagasEl) extSagasEl.textContent = extSagasNb;
     var extTomesEl = document.getElementById('extTomesCount');
@@ -662,8 +672,8 @@ function renderExternal() {
         return;
     }
 
-    var statusLabels = { 'read': '✅ Lu', 'toRead': '📥 À lire', 'returned': '📤 Retiré' };
-    var statusClasses = { 'read': 'ext-read', 'toRead': 'ext-toRead', 'returned': 'ext-returned' };
+    var statusLabels = { 'returned': '📤 Retiré', 'given': '🎁 Rendu', 'kept': '📚 Laissé' };
+    var statusClasses = { 'returned': 'ext-returned', 'given': 'ext-given', 'kept': 'ext-kept' };
     var html = '';
 
     for (var j = 0; j < filtered.length; j++) {
@@ -671,19 +681,19 @@ function renderExternal() {
         var starsH = it.rating > 0 ? '<div class="stars">' + '★'.repeat(it.rating) + '☆'.repeat(5 - it.rating) + '</div>' : '';
         var reviewH = it.review ? '<div class="review">"' + it.review + '"</div>' : '';
         var readDays = getReadingDaysText(it.dateStart, it.dateEnd);
-var readingH = '';
-if (it.status === 'read' && readDays) {
-    readingH = '<span class="reading-info">📖 Lu en ' + readDays + ' jour' + (readDays > 1 ? 's' : '') + '</span>';
-    if (it.dateStart && it.dateEnd) {
-        readingH += '<p class="reading-dates">📅 Du ' + formatDate(it.dateStart) + ' au ' + formatDate(it.dateEnd) + '</p>';
-    }
-}
+        var readingH = '';
+        if (readDays) {
+            readingH = '<span class="reading-info">📖 Lu en ' + readDays + ' jour' + (readDays > 1 ? 's' : '') + '</span>';
+            if (it.dateStart && it.dateEnd) {
+                readingH += '<p class="reading-dates">📅 Du ' + formatDate(it.dateStart) + ' au ' + formatDate(it.dateEnd) + '</p>';
+            }
+        }
         var sourceIcon = SOURCE_ICONS[it.source] || '📚';
         var sourceH = it.source ? '<span class="source-tag">' + sourceIcon + ' ' + it.source + '</span>' : '';
         var seriesH = it.series ? '<span class="saga-tag">📖 ' + it.series + '</span>' : '';
         var tomeH = it.tome ? '<span class="tome-tag">Tome ' + it.tome + '</span>' : '';
         var wantH = it.wantToBuy ? '<span class="want-buy-badge">🛒 À acheter</span>' : '';
-        var sc = statusClasses[it.status] || 'ext-toRead';
+        var sc = statusClasses[it.status] || 'ext-returned';
 
         html += '<div class="book-card ' + sc + '">' +
             '<button class="delete-icon" onclick="deleteExternal(' + it.id + ')">🗑</button>' +
@@ -695,11 +705,10 @@ if (it.status === 'read' && readDays) {
             '</div>' + readingH + starsH + reviewH +
             (it.notes ? '<p class="wish-notes">📝 ' + it.notes + '</p>' : '') +
             '<div class="actions">' +
-            (it.status === 'toRead' ? '<button class="btn-mark-read" onclick="markExtAsRead(' + it.id + ')">✅ Lu</button>' : '') +
-            (it.status === 'read' ? '<button class="btn-unread" onclick="markExtAsUnread(' + it.id + ')">📖 Pas lu</button>' : '') +
-            (it.status === 'returned' ? '<button class="btn-unread" onclick="markExtAsUnread(' + it.id + ')">📥 Remettre à lire</button>' : '') +
-            (it.status === 'read' ? '<button class="btn-rate" onclick="openRatingExtModal(' + it.id + ')">⭐ ' + (it.rating > 0 ? 'Modifier note' : 'Noter') + '</button>' : '') +
-            (it.status !== 'returned' ? '<button class="btn-returned" onclick="markExtAsReturned(' + it.id + ')">📤 Retiré/Vendu</button>' : '') +
+            '<button class="btn-rate" onclick="openRatingExtModal(' + it.id + ')">⭐ ' + (it.rating > 0 ? 'Modifier note' : 'Noter') + '</button>' +
+            (it.status !== 'returned' ? '<button class="btn-returned" onclick="changeExtStatus(' + it.id + ', \'returned\')">📤 Retiré</button>' : '') +
+            (it.status !== 'given' ? '<button class="btn-given" onclick="changeExtStatus(' + it.id + ', \'given\')">🎁 Rendu</button>' : '') +
+            (it.status !== 'kept' ? '<button class="btn-kept" onclick="changeExtStatus(' + it.id + ', \'kept\')">📚 Laissé</button>' : '') +
             '<button class="btn-want-buy" onclick="toggleExtWantBuy(' + it.id + ')">' + (it.wantToBuy ? '❌ Retirer wishlist' : '🛒 Ajouter wishlist') + '</button>' +
             '<button class="btn-edit" onclick="openEditExtModal(' + it.id + ')">✏️ Modifier</button>' +
             '</div></div>';
@@ -715,36 +724,13 @@ function filterExt(f, btn) {
     renderExternal();
 }
 
-function markExtAsRead(id) {
+function changeExtStatus(id, newStatus) {
     for (var i = 0; i < external.length; i++) {
         if (external[i].id === id) {
-            external[i].status = 'read';
+            external[i].status = newStatus;
             saveExternal(); renderAll();
-            showToast('✅ Lu !');
-            var eid = id;
-            setTimeout(function () { openRatingExtModal(eid); }, 400);
-            return;
-        }
-    }
-}
-
-function markExtAsUnread(id) {
-    for (var i = 0; i < external.length; i++) {
-        if (external[i].id === id) {
-            external[i].status = 'toRead';
-            saveExternal(); renderAll();
-            showToast('📥 Remis à lire !');
-            return;
-        }
-    }
-}
-
-function markExtAsReturned(id) {
-    for (var i = 0; i < external.length; i++) {
-        if (external[i].id === id) {
-            external[i].status = 'returned';
-            saveExternal(); renderAll();
-            showToast('📤 "' + external[i].title + '" retiré/vendu !');
+            var labels = { 'returned': '📤 Retiré', 'given': '🎁 Rendu', 'kept': '📚 Laissé' };
+            showToast(labels[newStatus] + ' !');
             return;
         }
     }
@@ -1257,9 +1243,8 @@ function updateStats() {
     for (var e = 0; e < external.length; e++) {
         if (external[e].rating > 0) { rSum += external[e].rating; rCount++; }
     }
-    var extReadCount = 0;
-    for (var ex = 0; ex < external.length; ex++) {
-        if (external[ex].status === 'read') extReadCount++;
+// Compte tous les livres externes (peu importe leur status car tous ont été lus)
+var extReadCount = external.length;
     }
     document.getElementById('toReadBooks').textContent = toRead;
     document.getElementById('readBooks').textContent = read;
