@@ -103,8 +103,8 @@ section h2{font-size:1.5rem;margin-bottom:15px;color:#fff}
 .book-card.wish-to-buy::before{background:linear-gradient(180deg,var(--wish-1),var(--wish-2))}
 .book-card.wish-bought::before{background:linear-gradient(180deg,var(--success-1),var(--success-2))}
 .book-card.ext-read::before{background:linear-gradient(180deg,var(--ext-1),var(--ext-2))}
-.book-card.ext-reading::before{background:linear-gradient(180deg,#ffd54f,#f57c00)}
 .book-card.ext-toRead::before{background:linear-gradient(180deg,var(--accent-1),var(--accent-2))}
+.book-card.ext-returned::before{background:linear-gradient(180deg,#999,#666)!important}
 .saga-card::before{background:linear-gradient(180deg,var(--saga-1),var(--saga-2))}
 .author-card::before{background:linear-gradient(180deg,var(--accent-1),var(--accent-2))}
 body:not(.no-animations) .book-card:hover,body:not(.no-animations) .saga-card:hover,body:not(.no-animations) .author-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
@@ -119,8 +119,8 @@ body.no-animations .book-card,body.no-animations .saga-card,body.no-animations .
 .status-badge.wish-to-buy{background:rgba(255,255,255,.08);color:var(--wish-1)}
 .status-badge.wish-bought{background:rgba(255,255,255,.08);color:var(--success-1)}
 .status-badge.ext-read{background:rgba(78,205,196,.15);color:var(--ext-1)}
-.status-badge.ext-reading{background:rgba(255,213,79,.15);color:#ffd54f}
 .status-badge.ext-toRead{background:rgba(255,255,255,.08);color:var(--accent-1)}
+.status-badge.ext-returned{background:rgba(150,150,150,.2);color:#bbb}
 .book-card .stars{color:#ffd700;font-size:1.2rem;margin:8px 0;letter-spacing:2px}
 .book-card .review{color:#aaa;font-size:.85rem;font-style:italic;margin:8px 0;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;border-left:3px solid rgba(255,215,0,.3)}
 .price-tag{display:inline-block;padding:3px 10px;background:rgba(255,215,0,.15);color:#ffd700;border-radius:20px;font-size:.8rem;font-weight:600;margin-left:5px}
@@ -139,9 +139,7 @@ body.no-animations .book-card,body.no-animations .saga-card,body.no-animations .
 .format-poche{background:rgba(255,213,79,.15);color:#ffd54f}
 .format-collector{background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(255,152,0,.2));color:#ffd700;border:1px solid rgba(255,215,0,.3)}
 .format-relie{background:rgba(129,199,132,.15);color:#81c784}
-.format-numerique{background:rgba(100,181,246,.15);color:#64b5f6}
-.format-audio{background:rgba(206,147,216,.15);color:#ce93d8}
-.format-autre{background:rgba(255,255,255,.08);color:#aaa}
+.format-audiobook{background:rgba(206,147,216,.15);color:#ce93d8}
 
 .book-card .actions,.saga-card .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .book-card .actions button,.saga-card .actions button{padding:6px 14px;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:.8rem;cursor:pointer;transition:all .3s}
@@ -153,7 +151,8 @@ body.no-animations .book-card,body.no-animations .saga-card,body.no-animations .
 .btn-transfer{background:rgba(102,126,234,.2);color:#667eea}.btn-transfer:hover{background:rgba(102,126,234,.35)}
 .btn-edit-saga{background:rgba(167,139,250,.2);color:var(--saga-1)}.btn-edit-saga:hover{background:rgba(167,139,250,.35)}
 .btn-want-buy{background:rgba(255,154,158,.2);color:var(--wish-1)}.btn-want-buy:hover{background:rgba(255,154,158,.35)}
-.btn-status-ext{background:rgba(78,205,196,.2);color:var(--ext-1)}.btn-status-ext:hover{background:rgba(78,205,196,.35)}
+.btn-returned{background:rgba(150,150,150,.2);color:#bbb}.btn-returned:hover{background:rgba(150,150,150,.35)}
+.btn-edit{background:rgba(102,126,234,.2);color:#667eea}.btn-edit:hover{background:rgba(102,126,234,.35)}
 .delete-icon{position:absolute;top:12px;right:12px;background:none;border:none;color:rgba(255,255,255,.2);font-size:1.2rem;cursor:pointer;transition:color .3s;padding:0}.delete-icon:hover{color:#f5576c}
 
 .saga-card .saga-info{margin:10px 0}.saga-card .saga-info span{display:inline-block;margin-right:10px;font-size:.85rem;color:#bbb}
@@ -199,8 +198,14 @@ body.no-animations .book-card,body.no-animations .saga-card,body.no-animations .
 .ab-rating{color:#ffd700;font-size:.8rem;margin-left:8px}
 .toggle-books-btn{background:rgba(255,255,255,.08);color:#ccc;border:none;padding:6px 14px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:.8rem;cursor:pointer;margin-top:8px;transition:all .3s}.toggle-books-btn:hover{background:rgba(255,255,255,.15)}
 
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(5px)}.modal-overlay.active{display:flex}
-.modal{background:linear-gradient(135deg,var(--bg-1),var(--bg-2));border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:35px;max-width:450px;width:90%;text-align:center;position:relative;animation:popIn .3s ease}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(5px);padding:20px;overflow-y:auto}.modal-overlay.active{display:flex}
+.modal{background:linear-gradient(135deg,var(--bg-1),var(--bg-2));border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:35px;max-width:450px;width:90%;text-align:center;position:relative;animation:popIn .3s ease;max-height:90vh;overflow-y:auto}
+.modal.modal-large{max-width:600px;text-align:left}
+.modal.modal-large h2{text-align:center}
+.modal.modal-large .input-group{margin-bottom:15px}
+.modal.modal-large .input-group label{display:block;font-size:.85rem;color:#aaa;margin-bottom:5px;text-align:left}
+.modal.modal-large .input-group input,.modal.modal-large .input-group select{width:100%;padding:12px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-family:'Poppins',sans-serif;font-size:.95rem}
+.modal.modal-large .input-group select option{background:var(--bg-2);color:#fff}
 .modal-close{position:absolute;top:15px;right:20px;background:none;border:none;color:#aaa;font-size:1.3rem;cursor:pointer}.modal-close:hover{color:#f5576c}
 .modal h2{margin-bottom:10px}.modal-book-title{color:var(--card-accent);font-size:1.1rem;font-weight:600;margin-bottom:20px}
 .stars-input{display:flex;justify-content:center;gap:8px;margin:15px 0}
@@ -236,7 +241,6 @@ body.no-animations .book-card,body.no-animations .saga-card,body.no-animations .
 .btn-danger{background:rgba(245,87,108,.15);color:#f5576c;border:1px solid rgba(245,87,108,.3)}.btn-danger:hover{background:rgba(245,87,108,.3)}
 .about-card{background:rgba(255,255,255,.03);border-radius:12px;padding:20px;line-height:1.8}.about-card p{color:#bbb}.about-small{font-size:.8rem;color:#777!important;margin-top:10px}
 
-/* AUTH / SYNC */
 .auth-tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:15px}
 .auth-tab{flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#ccc;font-family:'Poppins',sans-serif;cursor:pointer;transition:all .3s}
 .auth-tab:hover{background:rgba(255,255,255,.1)}
