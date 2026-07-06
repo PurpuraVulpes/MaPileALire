@@ -1269,7 +1269,6 @@ var extReadCount = external.length;
     document.getElementById('wishlistBought').textContent = wBought;
     document.getElementById('wishlistBudget').textContent = budget.toFixed(2) + ' €';
     document.getElementById('wishlistSpent').textContent = spent.toFixed(2) + ' €';
-}
 
 function showToast(msg) {
     var ex = document.querySelector('.toast');
