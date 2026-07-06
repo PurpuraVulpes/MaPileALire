@@ -52,55 +52,70 @@
         <section class="add-section">
             <h2>➕ Ajouter un livre</h2>
             <form id="addBookForm">
-                <div class="form-row">
-                    <div class="input-group">
-                        <label for="bookTitle">Titre</label>
-                        <input type="text" id="bookTitle" placeholder="Ex : L'Œil du Monde" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="bookAuthor">Auteur</label>
-                        <input type="text" id="bookAuthor" placeholder="Ex : Robert Jordan" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="bookGenre">Genre</label>
-                        <select id="bookGenre">
-                           <option value="Roman">📖 Roman</option>
-    <option value="SF">🚀 Science-Fiction</option>
-    <option value="Fantasy">🐉 Fantasy</option>
-    <option value="Fantastique">👻 Fantastique</option>
-    <option value="Thriller">🔪 Thriller</option>
-    <option value="Thriller psy">🧠 Thriller psychologique</option>
-    <option value="Policier">🕵️ Policier</option>
-    <option value="Romance">💕 Romance</option>
-    <option value="Young Adult">🌟 Young Adult</option>
-    <option value="BD">🎨 BD</option>
-    <option value="Manga">🏯 Manga</option>
-    <option value="Poésie">🌸 Poésie</option>
-    <option value="Histoire">🏛️ Histoire</option>
-    <option value="Dev perso">🧠 Dév. personnel</option>
-    <option value="Autre">📦 Autre</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="input-group saga-input-group">
-                        <label for="bookSeries">Série / Saga (optionnel)</label>
-                        <input type="text" id="bookSeries" placeholder="Ex : La Roue du Temps" list="seriesSuggestions" oninput="updateSeriesSuggestions()">
-                        <datalist id="seriesSuggestions"></datalist>
-                        <span class="input-hint">💡 Les livres avec le même nom de série seront regroupés automatiquement</span>
-                    </div>
-                    <div class="input-group tome-input-group">
-                        <label for="bookTome">Tome n°</label>
-                        <input type="number" id="bookTome" placeholder="Ex : 1" min="1">
-                    </div>
-                    <div class="input-group">
-                        <label for="bookTotalTomes">Tomes prévus</label>
-                        <input type="number" id="bookTotalTomes" placeholder="Ex : 14" min="1">
-                        <span class="input-hint">Remplis une seule fois</span>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-add"><span>📥</span> Ajouter à la pile</button>
-            </form>
+    <div class="form-row">
+        <div class="input-group">
+            <label for="bookTitle">Titre</label>
+            <input type="text" id="bookTitle" placeholder="Ex : L'Œil du Monde" required>
+        </div>
+        <div class="input-group">
+            <label for="bookAuthor">Auteur</label>
+            <input type="text" id="bookAuthor" placeholder="Ex : Robert Jordan" required>
+        </div>
+        <div class="input-group">
+            <label for="bookGenre">Genre</label>
+            <select id="bookGenre">
+                <option value="Roman">📖 Roman</option>
+                <option value="SF">🚀 Science-Fiction</option>
+                <option value="Fantasy">🐉 Fantasy</option>
+                <option value="Fantastique">👻 Fantastique</option>
+                <option value="Thriller">🔪 Thriller</option>
+                <option value="Thriller psy">🧠 Thriller psychologique</option>
+                <option value="Policier">🕵️ Policier</option>
+                <option value="Romance">💕 Romance</option>
+                <option value="Young Adult">🌟 Young Adult</option>
+                <option value="Jeunesse">🧸 Jeunesse</option>
+                <option value="BD">🎨 BD</option>
+                <option value="Manga">🏯 Manga</option>
+                <option value="Poésie">🌸 Poésie</option>
+                <option value="Histoire">🏛️ Histoire</option>
+                <option value="Dev perso">🧠 Dév. personnel</option>
+                <option value="Autre">📦 Autre</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="input-group saga-input-group">
+            <label for="bookSeries">Série / Saga (optionnel)</label>
+            <input type="text" id="bookSeries" placeholder="Ex : La Roue du Temps" list="seriesSuggestions" oninput="updateSeriesSuggestions()">
+            <datalist id="seriesSuggestions"></datalist>
+            <span class="input-hint">💡 Les livres avec le même nom de série seront regroupés automatiquement</span>
+        </div>
+        <div class="input-group tome-input-group">
+            <label for="bookTome">Tome n°</label>
+            <input type="number" id="bookTome" placeholder="Ex : 1" min="1">
+        </div>
+        <div class="input-group">
+            <label for="bookTotalTomes">Tomes prévus</label>
+            <input type="number" id="bookTotalTomes" placeholder="Ex : 14" min="1">
+            <span class="input-hint">Remplis une seule fois</span>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="input-group">
+            <label for="bookFormat">Format</label>
+            <select id="bookFormat">
+                <option value="Broché">📕 Broché</option>
+                <option value="Poche">📒 Poche</option>
+                <option value="Collector">✨ Collector</option>
+                <option value="Relié">📗 Relié</option>
+                <option value="Numérique">📱 Numérique</option>
+                <option value="Audio">🎧 Audio</option>
+                <option value="Autre">📦 Autre</option>
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-add"><span>📥</span> Ajouter à la pile</button>
+</form>
         </section>
 
         <section class="random-section">
@@ -243,7 +258,7 @@
                 <div class="form-row">
                     <div class="input-group">
                         <label for="wishGenre">Genre</label>
-                       <select id="wishGenre">
+                     <select id="wishGenre">
     <option value="Roman">📖 Roman</option>
     <option value="SF">🚀 SF</option>
     <option value="Fantasy">🐉 Fantasy</option>
@@ -253,6 +268,7 @@
     <option value="Policier">🕵️ Policier</option>
     <option value="Romance">💕 Romance</option>
     <option value="Young Adult">🌟 Young Adult</option>
+    <option value="Jeunesse">🧸 Jeunesse</option>
     <option value="BD">🎨 BD</option>
     <option value="Manga">🏯 Manga</option>
     <option value="Poésie">🌸 Poésie</option>
