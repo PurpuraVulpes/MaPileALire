@@ -9,26 +9,25 @@
 </head>
 <body>
 
-    <!-- PARTICULES FOND -->
     <div class="particles" id="particles"></div>
 
     <!-- NAV -->
     <nav class="main-nav">
         <button class="nav-btn active" onclick="switchTab('home', this)">📚 Bibliothèque</button>
+        <button class="nav-btn" onclick="switchTab('sagas', this)">📖 Sagas</button>
+        <button class="nav-btn" onclick="switchTab('authors', this)">✍️ Auteurs</button>
         <button class="nav-btn" onclick="switchTab('wishlist', this)">🛒 À acheter</button>
         <button class="nav-btn" onclick="switchTab('settings', this)">⚙️ Paramètres</button>
     </nav>
 
     <!-- ==================== PAGE HOME ==================== -->
     <div class="page active" id="page-home">
-
         <header>
             <div class="logo">📚</div>
             <h1>Ma Pile à Livres</h1>
             <p class="subtitle">Organise tes lectures, découvre ton prochain livre !</p>
         </header>
 
-        <!-- STATS -->
         <section class="stats-bar">
             <div class="stat">
                 <span class="stat-number" id="totalBooks">0</span>
@@ -50,9 +49,12 @@
                 <span class="stat-number" id="wishlistCount">0</span>
                 <span class="stat-label">À acheter</span>
             </div>
+            <div class="stat">
+                <span class="stat-number" id="sagasCount">0</span>
+                <span class="stat-label">Sagas</span>
+            </div>
         </section>
 
-        <!-- FORMULAIRE AJOUT -->
         <section class="add-section">
             <h2>➕ Ajouter un livre</h2>
             <form id="addBookForm">
@@ -81,13 +83,24 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="bookSaga">Saga (optionnel)</label>
+                        <select id="bookSaga">
+                            <option value="">Aucune saga</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="bookTome">Numéro de tome</label>
+                        <input type="number" id="bookTome" placeholder="Ex : 1" min="1">
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-add">
                     <span>📥</span> Ajouter à la pile
                 </button>
             </form>
         </section>
 
-        <!-- SELECTION ALEATOIRE -->
         <section class="random-section">
             <h2>🎲 Quel livre lire ?</h2>
             <p>Laisse le hasard décider pour toi !</p>
@@ -103,7 +116,6 @@
             <div class="random-result" id="randomResult"></div>
         </section>
 
-        <!-- FILTRES -->
         <section class="filter-section">
             <h2>📋 Ma bibliothèque</h2>
             <div class="filters">
@@ -111,26 +123,167 @@
                 <button class="filter-btn" onclick="filterBooks('toRead', this)">📖 À lire</button>
                 <button class="filter-btn" onclick="filterBooks('read', this)">✅ Lus</button>
             </div>
+            <div class="sort-bar">
+                <label>Trier par :</label>
+                <select id="bookSortSelect" onchange="renderBooks()">
+                    <option value="default">Par défaut</option>
+                    <option value="title">Titre A-Z</option>
+                    <option value="author">Auteur A-Z</option>
+                    <option value="rating">Note ↓</option>
+                    <option value="saga">Saga</option>
+                    <option value="dateAdded">Date d'ajout</option>
+                </select>
+            </div>
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="🔍 Rechercher un livre..." oninput="renderBooks()">
             </div>
         </section>
 
-        <!-- LISTE DES LIVRES -->
         <section class="books-list" id="booksList"></section>
+    </div>
 
+    <!-- ==================== PAGE SAGAS ==================== -->
+    <div class="page" id="page-sagas">
+        <header>
+            <div class="logo">📖</div>
+            <h1>Mes Sagas</h1>
+            <p class="subtitle">Suis ta progression dans tes séries préférées</p>
+        </header>
+
+        <section class="stats-bar">
+            <div class="stat">
+                <span class="stat-number" id="sagasTotalStat">0</span>
+                <span class="stat-label">Sagas</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="sagasCompletedStat">0</span>
+                <span class="stat-label">Terminées</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="sagasInProgressStat">0</span>
+                <span class="stat-label">En cours</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="sagasTotalTomes">0</span>
+                <span class="stat-label">Tomes total</span>
+            </div>
+        </section>
+
+        <section class="add-section">
+            <h2>➕ Créer une saga</h2>
+            <form id="addSagaForm">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="sagaName">Nom de la saga</label>
+                        <input type="text" id="sagaName" placeholder="Ex : Harry Potter" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="sagaAuthor">Auteur</label>
+                        <input type="text" id="sagaAuthor" placeholder="Ex : J.K. Rowling" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="sagaTotalTomes">Nombre total de tomes</label>
+                        <input type="number" id="sagaTotalTomes" placeholder="Ex : 7" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="sagaGenre">Genre</label>
+                        <select id="sagaGenre">
+                            <option value="Roman">📖 Roman</option>
+                            <option value="SF">🚀 Science-Fiction</option>
+                            <option value="Fantasy">🐉 Fantasy</option>
+                            <option value="Thriller">🔪 Thriller</option>
+                            <option value="BD">🎨 BD / Manga</option>
+                            <option value="Essai">📝 Essai</option>
+                            <option value="Histoire">🏛️ Histoire</option>
+                            <option value="Autre">📦 Autre</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="sagaStatus">Statut</label>
+                        <select id="sagaStatus">
+                            <option value="ongoing">📝 En cours de parution</option>
+                            <option value="complete">✅ Parution terminée</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group" style="flex:1 1 100%">
+                        <label for="sagaNotes">Notes (optionnel)</label>
+                        <input type="text" id="sagaNotes" placeholder="Ex : Recommandé par un ami...">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-add-saga">
+                    <span>📖</span> Créer la saga
+                </button>
+            </form>
+        </section>
+
+        <section class="filter-section">
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterSagas('all', this)">📖 Toutes</button>
+                <button class="filter-btn" onclick="filterSagas('inProgress', this)">🔄 En cours</button>
+                <button class="filter-btn" onclick="filterSagas('completed', this)">✅ Terminées</button>
+                <button class="filter-btn" onclick="filterSagas('notStarted', this)">⏳ Pas commencées</button>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="sagaSearchInput" placeholder="🔍 Rechercher une saga..." oninput="renderSagas()">
+            </div>
+        </section>
+
+        <section class="sagas-list" id="sagasList"></section>
+    </div>
+
+    <!-- ==================== PAGE AUTHORS ==================== -->
+    <div class="page" id="page-authors">
+        <header>
+            <div class="logo">✍️</div>
+            <h1>Mes Auteurs</h1>
+            <p class="subtitle">Explore ta bibliothèque par auteur</p>
+        </header>
+
+        <section class="stats-bar">
+            <div class="stat">
+                <span class="stat-number" id="authorsTotal">0</span>
+                <span class="stat-label">Auteurs</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="authorTopName">-</span>
+                <span class="stat-label">Top auteur</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="authorTopCount">0</span>
+                <span class="stat-label">Livres du top</span>
+            </div>
+        </section>
+
+        <section class="filter-section">
+            <div class="sort-bar">
+                <label>Trier par :</label>
+                <select id="authorSortSelect" onchange="renderAuthors()">
+                    <option value="count">Nombre de livres ↓</option>
+                    <option value="name">Nom A-Z</option>
+                    <option value="rating">Meilleure note ↓</option>
+                    <option value="read">Livres lus ↓</option>
+                </select>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="authorSearchInput" placeholder="🔍 Rechercher un auteur..." oninput="renderAuthors()">
+            </div>
+        </section>
+
+        <section class="authors-list" id="authorsList"></section>
     </div>
 
     <!-- ==================== PAGE WISHLIST ==================== -->
     <div class="page" id="page-wishlist">
-
         <header>
             <div class="logo">🛒</div>
             <h1>Ma Liste d'Achats</h1>
             <p class="subtitle">Les livres que tu veux acquérir</p>
         </header>
 
-        <!-- STATS WISHLIST -->
         <section class="stats-bar">
             <div class="stat">
                 <span class="stat-number" id="wishlistTotal">0</span>
@@ -150,7 +303,6 @@
             </div>
         </section>
 
-        <!-- FORMULAIRE WISHLIST -->
         <section class="add-section">
             <h2>➕ Ajouter à la liste d'achats</h2>
             <form id="addWishlistForm">
@@ -194,7 +346,7 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group" style="flex: 1 1 100%;">
+                    <div class="input-group" style="flex:1 1 100%">
                         <label for="wishNotes">Notes / Lien (optionnel)</label>
                         <input type="text" id="wishNotes" placeholder="Ex : Vu en librairie, lien Amazon...">
                     </div>
@@ -205,7 +357,6 @@
             </form>
         </section>
 
-        <!-- FILTRES WISHLIST -->
         <section class="filter-section">
             <div class="filters">
                 <button class="filter-btn active" onclick="filterWishlist('all', this)">🛒 Tous</button>
@@ -217,65 +368,33 @@
             </div>
         </section>
 
-        <!-- LISTE WISHLIST -->
         <section class="books-list" id="wishlistList"></section>
-
     </div>
 
     <!-- ==================== PAGE SETTINGS ==================== -->
     <div class="page" id="page-settings">
-
         <header>
             <div class="logo">⚙️</div>
             <h1>Paramètres</h1>
             <p class="subtitle">Personnalise ton expérience</p>
         </header>
 
-        <!-- THÈMES -->
         <section class="settings-section">
             <h2>🎨 Thème de couleurs</h2>
             <p class="settings-desc">Choisis l'ambiance qui te plaît.</p>
             <div class="theme-grid">
-                <button class="theme-card" onclick="setTheme('purple')" data-theme-btn="purple">
-                    <div class="theme-preview purple-prev"></div>
-                    <span>💜 Violet</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('blue')" data-theme-btn="blue">
-                    <div class="theme-preview blue-prev"></div>
-                    <span>💙 Bleu</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('green')" data-theme-btn="green">
-                    <div class="theme-preview green-prev"></div>
-                    <span>💚 Vert</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('red')" data-theme-btn="red">
-                    <div class="theme-preview red-prev"></div>
-                    <span>❤️ Rouge</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('orange')" data-theme-btn="orange">
-                    <div class="theme-preview orange-prev"></div>
-                    <span>🧡 Orange</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('pink')" data-theme-btn="pink">
-                    <div class="theme-preview pink-prev"></div>
-                    <span>💗 Rose</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('dark')" data-theme-btn="dark">
-                    <div class="theme-preview dark-prev"></div>
-                    <span>🖤 Noir</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('cyan')" data-theme-btn="cyan">
-                    <div class="theme-preview cyan-prev"></div>
-                    <span>🩵 Cyan</span>
-                </button>
-                <button class="theme-card" onclick="setTheme('gold')" data-theme-btn="gold">
-                    <div class="theme-preview gold-prev"></div>
-                    <span>💛 Or</span>
-                </button>
+                <button class="theme-card" onclick="setTheme('purple')" data-theme-btn="purple"><div class="theme-preview purple-prev"></div><span>💜 Violet</span></button>
+                <button class="theme-card" onclick="setTheme('blue')" data-theme-btn="blue"><div class="theme-preview blue-prev"></div><span>💙 Bleu</span></button>
+                <button class="theme-card" onclick="setTheme('green')" data-theme-btn="green"><div class="theme-preview green-prev"></div><span>💚 Vert</span></button>
+                <button class="theme-card" onclick="setTheme('red')" data-theme-btn="red"><div class="theme-preview red-prev"></div><span>❤️ Rouge</span></button>
+                <button class="theme-card" onclick="setTheme('orange')" data-theme-btn="orange"><div class="theme-preview orange-prev"></div><span>🧡 Orange</span></button>
+                <button class="theme-card" onclick="setTheme('pink')" data-theme-btn="pink"><div class="theme-preview pink-prev"></div><span>💗 Rose</span></button>
+                <button class="theme-card" onclick="setTheme('dark')" data-theme-btn="dark"><div class="theme-preview dark-prev"></div><span>🖤 Noir</span></button>
+                <button class="theme-card" onclick="setTheme('cyan')" data-theme-btn="cyan"><div class="theme-preview cyan-prev"></div><span>🩵 Cyan</span></button>
+                <button class="theme-card" onclick="setTheme('gold')" data-theme-btn="gold"><div class="theme-preview gold-prev"></div><span>💛 Or</span></button>
             </div>
         </section>
 
-        <!-- EFFETS -->
         <section class="settings-section">
             <h2>✨ Effets visuels</h2>
             <div class="setting-row">
@@ -284,7 +403,7 @@
                     <span class="setting-hint">Petites bulles flottantes</span>
                 </div>
                 <label class="toggle">
-                    <input type="checkbox" id="toggleParticles" checked onchange="toggleParticles()">
+                    <input type="checkbox" id="toggleParticles" checked onchange="toggleParticlesF()">
                     <span class="toggle-slider"></span>
                 </label>
             </div>
@@ -294,13 +413,12 @@
                     <span class="setting-hint">Effets au survol</span>
                 </div>
                 <label class="toggle">
-                    <input type="checkbox" id="toggleAnimations" checked onchange="toggleAnimations()">
+                    <input type="checkbox" id="toggleAnimations" checked onchange="toggleAnimationsF()">
                     <span class="toggle-slider"></span>
                 </label>
             </div>
         </section>
 
-        <!-- DONNÉES -->
         <section class="settings-section">
             <h2>💾 Données</h2>
             <div class="data-actions">
@@ -311,17 +429,15 @@
             </div>
         </section>
 
-        <!-- A PROPOS -->
         <section class="settings-section">
             <h2>ℹ️ À propos</h2>
             <div class="about-card">
                 <p><strong>📚 Ma Pile à Livres</strong></p>
-                <p>Version 3.0</p>
+                <p>Version 4.0</p>
                 <p>Fait avec ❤️ en HTML, CSS & JavaScript</p>
                 <p class="about-small">Les données sont sauvegardées localement dans ton navigateur.</p>
             </div>
         </section>
-
     </div>
 
     <!-- MODAL NOTATION -->
@@ -360,7 +476,7 @@
     </div>
 
     <footer>
-        <p>📚 Ma Pile à Livres — Fait avec ❤️ — 2025</p>
+        <p>📚 Ma Pile à Livres v4.0 — Fait avec ❤️ — 2025</p>
     </footer>
 
     <script src="script.js"></script>
