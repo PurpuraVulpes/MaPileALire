@@ -1,0 +1,21 @@
+{
+    "name": "Ma Pile à Livres",
+    "short_name": "Pile à Livres",
+    "description": "Organise tes lectures, découvre ton prochain livre !",
+    "start_url": "../index.html",
+    "display": "standalone",
+    "background_color": "#0f0c29",
+    "theme_color": "#0f0c29",
+    "icons": [
+        {
+            "src": "android-chrome-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "android-chrome-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
