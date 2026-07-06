@@ -8,6 +8,7 @@ let settings = JSON.parse(localStorage.getItem('myBookPileSettings')) || {
     theme: 'purple', particles: true, animations: true
 };
 
+
 let currentFilter = 'all';
 let wishlistFilter = 'all';
 let sagaFilter = 'all';
