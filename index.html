@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;500;700&family=Open+Sans:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Dancing+Script:wght@400;600;700&family=Comfortaa:wght@300;400;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    
+
     <div class="particles" id="particles"></div>
 
     <nav class="main-nav">
@@ -33,19 +33,19 @@
             <p class="subtitle">Organise tes lectures, découvre ton prochain livre !</p>
         </header>
 
-       <section class="stats-bar">
-    <div class="stat"><span class="stat-number" id="totalBooks">0</span><span class="stat-label">Ma biblio</span></div>
-    <div class="stat"><span class="stat-number" id="toReadBooks">0</span><span class="stat-label">À lire</span></div>
-    <div class="stat"><span class="stat-number" id="readBooks">0</span><span class="stat-label">Lus</span></div>
-    <div class="stat"><span class="stat-number" id="externalCount">0</span><span class="stat-label">Empruntés</span></div>
-    <div class="stat"><span class="stat-number" id="totalReadGlobal">0</span><span class="stat-label">Total lus</span></div>
-    <div class="stat"><span class="stat-number" id="avgRating">-</span><span class="stat-label">Note moy.</span></div>
-    <div class="stat"><span class="stat-number" id="sagasCount">0</span><span class="stat-label">Sagas</span></div>
-    <div class="stat"><span class="stat-number" id="oneShotCount">0</span><span class="stat-label">One Shot</span></div>
-    <div class="stat"><span class="stat-number" id="brocheCount">0</span><span class="stat-label">📕 Broché</span></div>
-    <div class="stat"><span class="stat-number" id="pocheCount">0</span><span class="stat-label">📒 Poche</span></div>
-    <div class="stat"><span class="stat-number" id="wishlistCount">0</span><span class="stat-label">À acheter</span></div>
-</section>
+        <section class="stats-bar">
+            <div class="stat"><span class="stat-number" id="totalBooks">0</span><span class="stat-label">Ma biblio</span></div>
+            <div class="stat"><span class="stat-number" id="toReadBooks">0</span><span class="stat-label">À lire</span></div>
+            <div class="stat"><span class="stat-number" id="readBooks">0</span><span class="stat-label">Lus</span></div>
+            <div class="stat"><span class="stat-number" id="externalCount">0</span><span class="stat-label">Empruntés</span></div>
+            <div class="stat"><span class="stat-number" id="totalReadGlobal">0</span><span class="stat-label">Total lus</span></div>
+            <div class="stat"><span class="stat-number" id="avgRating">-</span><span class="stat-label">Note moy.</span></div>
+            <div class="stat"><span class="stat-number" id="sagasCount">0</span><span class="stat-label">Sagas</span></div>
+            <div class="stat"><span class="stat-number" id="oneShotCount">0</span><span class="stat-label">One Shot</span></div>
+            <div class="stat"><span class="stat-number" id="brocheCount">0</span><span class="stat-label">📕 Broché</span></div>
+            <div class="stat"><span class="stat-number" id="pocheCount">0</span><span class="stat-label">📒 Poche</span></div>
+            <div class="stat"><span class="stat-number" id="wishlistCount">0</span><span class="stat-label">À acheter</span></div>
+        </section>
 
         <section class="add-section">
             <h2>➕ Ajouter un livre</h2>
@@ -73,7 +73,6 @@
                             <option value="Policier">🕵️ Policier</option>
                             <option value="Romance">💕 Romance</option>
                             <option value="Dark Romance">🖤 Dark Romance</option>
-                            <option value="New Adult">🔥 New Adult</option>
                             <option value="Young Adult">🌟 Young Adult</option>
                             <option value="Jeunesse">🧸 Jeunesse</option>
                             <option value="BD">🎨 BD</option>
@@ -83,7 +82,6 @@
                             <option value="Poésie">🌸 Poésie</option>
                             <option value="Histoire">🏛️ Histoire</option>
                             <option value="Dev perso">🧠 Dév. personnel</option>
-                            <option value="Autre">📦 Autre</option>
                         </select>
                     </div>
                     <div class="input-group">
@@ -93,9 +91,7 @@
                             <option value="Poche">📒 Poche</option>
                             <option value="Collector">✨ Collector</option>
                             <option value="Relié">📗 Relié</option>
-                            <option value="Numérique">📱 Numérique</option>
-                            <option value="Audio">🎧 Audio</option>
-                            <option value="Autre">📦 Autre</option>
+                            <option value="Audiobook">🎧 Audiobook</option>
                         </select>
                     </div>
                 </div>
@@ -136,6 +132,8 @@
                 <button class="filter-btn active" onclick="filterBooks('all', this)">📚 Tous</button>
                 <button class="filter-btn" onclick="filterBooks('toRead', this)">📖 À lire</button>
                 <button class="filter-btn" onclick="filterBooks('read', this)">✅ Lus</button>
+                <button class="filter-btn" onclick="filterBooks('oneShot', this)">📕 One Shot</button>
+                <button class="filter-btn" onclick="filterBooks('series', this)">📚 Sagas</button>
             </div>
             <div class="sort-bar">
                 <label>Trier :</label>
@@ -161,14 +159,17 @@
         <header>
             <div class="logo">📖</div>
             <h1>Livres Empruntés / Lus ailleurs</h1>
-            <p class="subtitle">Livres lus à la bibliothèque, sur internet, empruntés à un ami...</p>
+            <p class="subtitle">Livres lus à la bibliothèque, sur internet, à l'école...</p>
         </header>
 
         <section class="stats-bar">
             <div class="stat"><span class="stat-number" id="extTotal">0</span><span class="stat-label">Total</span></div>
             <div class="stat"><span class="stat-number" id="extRead">0</span><span class="stat-label">Lus</span></div>
+            <div class="stat"><span class="stat-number" id="extReturned">0</span><span class="stat-label">Retirés</span></div>
             <div class="stat"><span class="stat-number" id="extToBuy">0</span><span class="stat-label">À acheter</span></div>
             <div class="stat"><span class="stat-number" id="extAvgRating">-</span><span class="stat-label">Note moy.</span></div>
+            <div class="stat"><span class="stat-number" id="extSagasCount">0</span><span class="stat-label">Sagas ext.</span></div>
+            <div class="stat"><span class="stat-number" id="extTomesCount">0</span><span class="stat-label">Tomes ext.</span></div>
         </section>
 
         <section class="auto-saga-info">
@@ -176,7 +177,7 @@
                 <span class="info-icon">💡</span>
                 <div>
                     <strong>Livres externes à ta collection</strong>
-                    <p>Comptés dans tes stats de lecture mais pas dans ta bibliothèque perso ni dans les sagas. Coche "je veux l'acheter" pour l'ajouter à la wishlist !</p>
+                    <p>Comptés dans tes stats mais pas dans ta bibliothèque perso ni dans les sagas. Coche "je veux l'acheter" pour l'ajouter à la wishlist !</p>
                 </div>
             </div>
         </section>
@@ -207,7 +208,6 @@
                             <option value="Policier">🕵️ Policier</option>
                             <option value="Romance">💕 Romance</option>
                             <option value="Dark Romance">🖤 Dark Romance</option>
-                            <option value="New Adult">🔥 New Adult</option>
                             <option value="Young Adult">🌟 Young Adult</option>
                             <option value="Jeunesse">🧸 Jeunesse</option>
                             <option value="BD">🎨 BD</option>
@@ -217,7 +217,6 @@
                             <option value="Poésie">🌸 Poésie</option>
                             <option value="Histoire">🏛️ Histoire</option>
                             <option value="Dev perso">🧠 Dév. personnel</option>
-                            <option value="Autre">📦 Autre</option>
                         </select>
                     </div>
                     <div class="input-group">
@@ -225,9 +224,7 @@
                         <select id="extSource">
                             <option value="Bibliothèque">🏛️ Bibliothèque</option>
                             <option value="Internet">💻 Internet</option>
-                            <option value="Ami">👥 Ami/Famille</option>
                             <option value="École">🎓 École</option>
-                            <option value="Autre">📦 Autre</option>
                         </select>
                     </div>
                 </div>
@@ -245,8 +242,8 @@
                         <label for="extStatus">Statut</label>
                         <select id="extStatus">
                             <option value="read">✅ Déjà lu</option>
-                            <option value="reading">📖 En cours</option>
                             <option value="toRead">📥 À lire</option>
+                            <option value="returned">📤 Retiré/Rendu</option>
                         </select>
                     </div>
                 </div>
@@ -272,8 +269,8 @@
             <div class="filters">
                 <button class="filter-btn active" onclick="filterExt('all', this)">📖 Tous</button>
                 <button class="filter-btn" onclick="filterExt('read', this)">✅ Lus</button>
-                <button class="filter-btn" onclick="filterExt('reading', this)">📖 En cours</button>
                 <button class="filter-btn" onclick="filterExt('toRead', this)">📥 À lire</button>
+                <button class="filter-btn" onclick="filterExt('returned', this)">📤 Retirés</button>
                 <button class="filter-btn" onclick="filterExt('wantToBuy', this)">🛒 À acheter</button>
             </div>
             <div class="sort-bar">
@@ -397,11 +394,11 @@
                             <option value="Fantastique">👻 Fantastique</option><option value="Thriller">🔪 Thriller</option>
                             <option value="Thriller psy">🧠 Thriller psy</option><option value="Policier">🕵️ Policier</option>
                             <option value="Romance">💕 Romance</option><option value="Dark Romance">🖤 Dark Romance</option>
-                            <option value="New Adult">🔥 New Adult</option><option value="Young Adult">🌟 Young Adult</option>
+                            <option value="Young Adult">🌟 Young Adult</option>
                             <option value="Jeunesse">🧸 Jeunesse</option><option value="BD">🎨 BD</option><option value="Manga">🏯 Manga</option>
                             <option value="Biographie">📋 Biographie</option><option value="Philosophie">💭 Philosophie</option>
                             <option value="Poésie">🌸 Poésie</option><option value="Histoire">🏛️ Histoire</option>
-                            <option value="Dev perso">🧠 Dév. perso</option><option value="Autre">📦 Autre</option>
+                            <option value="Dev perso">🧠 Dév. perso</option>
                         </select>
                     </div>
                     <div class="input-group">
@@ -409,8 +406,7 @@
                         <select id="wishFormat">
                             <option value="Broché">📕 Broché</option><option value="Poche">📒 Poche</option>
                             <option value="Collector">✨ Collector</option><option value="Relié">📗 Relié</option>
-                            <option value="Numérique">📱 Numérique</option><option value="Audio">🎧 Audio</option>
-                            <option value="Autre">📦 Autre</option>
+                            <option value="Audiobook">🎧 Audiobook</option>
                         </select>
                     </div>
                     <div class="input-group">
@@ -454,46 +450,26 @@
             <p class="subtitle">Personnalise ton expérience</p>
         </header>
 
-        <!-- SYNCHRONISATION CLOUD -->
         <section class="settings-section" id="syncSection">
             <h2>☁️ Synchronisation Cloud</h2>
             <p class="settings-desc">Synchronise tes données entre tous tes appareils.</p>
-
             <div id="authNotLogged">
                 <div class="auth-tabs">
                     <button class="auth-tab active" onclick="showAuthTab('login', this)">🔑 Connexion</button>
                     <button class="auth-tab" onclick="showAuthTab('register', this)">📝 Inscription</button>
                 </div>
-
                 <div class="auth-form active" id="loginForm">
-                    <div class="input-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" placeholder="ton@email.com">
-                    </div>
-                    <div class="input-group">
-                        <label for="loginPassword">Mot de passe</label>
-                        <input type="password" id="loginPassword" placeholder="••••••••">
-                    </div>
+                    <div class="input-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" placeholder="ton@email.com"></div>
+                    <div class="input-group"><label for="loginPassword">Mot de passe</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
                     <button class="btn btn-add" onclick="firebaseLogin()">🔑 Se connecter</button>
                 </div>
-
                 <div class="auth-form" id="registerForm">
-                    <div class="input-group">
-                        <label for="regEmail">Email</label>
-                        <input type="email" id="regEmail" placeholder="ton@email.com">
-                    </div>
-                    <div class="input-group">
-                        <label for="regPassword">Mot de passe (min. 6 caractères)</label>
-                        <input type="password" id="regPassword" placeholder="••••••••">
-                    </div>
-                    <div class="input-group">
-                        <label for="regPassword2">Confirmer le mot de passe</label>
-                        <input type="password" id="regPassword2" placeholder="••••••••">
-                    </div>
+                    <div class="input-group"><label for="regEmail">Email</label><input type="email" id="regEmail" placeholder="ton@email.com"></div>
+                    <div class="input-group"><label for="regPassword">Mot de passe (min. 6)</label><input type="password" id="regPassword" placeholder="••••••••"></div>
+                    <div class="input-group"><label for="regPassword2">Confirmer</label><input type="password" id="regPassword2" placeholder="••••••••"></div>
                     <button class="btn btn-add" onclick="firebaseRegister()">📝 Créer un compte</button>
                 </div>
             </div>
-
             <div id="authLogged" style="display:none">
                 <div class="user-info">
                     <div class="user-avatar">👤</div>
@@ -503,16 +479,15 @@
                     </div>
                 </div>
                 <div class="sync-actions">
-                    <button class="btn btn-export" onclick="firebaseSync()">🔄 Synchroniser maintenant</button>
-                    <button class="btn btn-import" onclick="firebasePullData()">⬇️ Récupérer les données du cloud</button>
-                    <button class="btn btn-danger" onclick="firebaseLogout()">🚪 Se déconnecter</button>
+                    <button class="btn btn-export" onclick="firebaseSync()">🔄 Synchroniser</button>
+                    <button class="btn btn-import" onclick="firebasePullData()">⬇️ Récupérer</button>
+                    <button class="btn btn-danger" onclick="firebaseLogout()">🚪 Déconnexion</button>
                 </div>
             </div>
         </section>
 
         <section class="settings-section">
             <h2>🎨 Thème de couleurs</h2>
-            <p class="settings-desc">Choisis l'ambiance qui te plaît.</p>
             <div class="theme-grid">
                 <button class="theme-card" onclick="setTheme('purple')" data-theme-btn="purple"><div class="theme-preview purple-prev"></div><span>💜 Violet</span></button>
                 <button class="theme-card" onclick="setTheme('blue')" data-theme-btn="blue"><div class="theme-preview blue-prev"></div><span>💙 Bleu</span></button>
@@ -528,7 +503,6 @@
 
         <section class="settings-section">
             <h2>🔤 Police d'écriture</h2>
-            <p class="settings-desc">Choisis la police qui te plaît le plus.</p>
             <div class="font-grid">
                 <button class="font-card" onclick="setFont('Poppins')" data-font-btn="Poppins" style="font-family:'Poppins',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Poppins</span></button>
                 <button class="font-card" onclick="setFont('Roboto')" data-font-btn="Roboto" style="font-family:'Roboto',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Roboto</span></button>
@@ -559,7 +533,7 @@
         <section class="settings-section">
             <h2>💾 Données locales</h2>
             <div class="data-actions">
-                <button class="btn btn-export" onclick="exportData()">📤 Exporter (JSON)</button>
+                <button class="btn btn-export" onclick="exportData()">📤 Exporter</button>
                 <button class="btn btn-import" onclick="document.getElementById('importFile').click()">📥 Importer</button>
                 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
                 <button class="btn btn-danger" onclick="clearAllData()">🗑️ Tout supprimer</button>
@@ -569,8 +543,8 @@
         <section class="settings-section">
             <h2>ℹ️ À propos</h2>
             <div class="about-card">
-                <p><strong>📚 Ma Pile à Livres</strong> — Version 9.0</p>
-                <p>Bibliothèque, empruntés, sagas, auteurs, wishlist, thèmes, sync cloud</p>
+                <p><strong>📚 Ma Pile à Livres</strong> — Version 11.0</p>
+                <p>Fait avec ❤️ — 2025</p>
                 <p class="about-small">Données sauvegardées localement + cloud (Firebase)</p>
             </div>
         </section>
@@ -635,43 +609,244 @@
         </div>
     </div>
 
-    <footer><p>📚 Ma Pile à Livres v9.0 — Fait avec ❤️ — 2025</p></footer>
+    <!-- MODAL ÉDITION LIVRE BIBLIO -->
+    <div class="modal-overlay" id="editBookModal">
+        <div class="modal modal-large">
+            <button class="modal-close" onclick="closeEditBookModal()">✕</button>
+            <h2>✏️ Modifier le livre</h2>
+            <div class="input-group">
+                <label for="editBookTitle">Titre</label>
+                <input type="text" id="editBookTitle" required>
+            </div>
+            <div class="input-group">
+                <label for="editBookAuthor">Auteur</label>
+                <input type="text" id="editBookAuthor" required>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="editBookGenre">Genre</label>
+                    <select id="editBookGenre">
+                        <option value="Roman">📖 Roman</option>
+                        <option value="SF">🚀 Science-Fiction</option>
+                        <option value="Fantasy">🐉 Fantasy</option>
+                        <option value="Fantastique">👻 Fantastique</option>
+                        <option value="Thriller">🔪 Thriller</option>
+                        <option value="Thriller psy">🧠 Thriller psychologique</option>
+                        <option value="Policier">🕵️ Policier</option>
+                        <option value="Romance">💕 Romance</option>
+                        <option value="Dark Romance">🖤 Dark Romance</option>
+                        <option value="Young Adult">🌟 Young Adult</option>
+                        <option value="Jeunesse">🧸 Jeunesse</option>
+                        <option value="BD">🎨 BD</option>
+                        <option value="Manga">🏯 Manga</option>
+                        <option value="Biographie">📋 Biographie</option>
+                        <option value="Philosophie">💭 Philosophie</option>
+                        <option value="Poésie">🌸 Poésie</option>
+                        <option value="Histoire">🏛️ Histoire</option>
+                        <option value="Dev perso">🧠 Dév. personnel</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editBookFormat">Format</label>
+                    <select id="editBookFormat">
+                        <option value="Broché">📕 Broché</option>
+                        <option value="Poche">📒 Poche</option>
+                        <option value="Collector">✨ Collector</option>
+                        <option value="Relié">📗 Relié</option>
+                        <option value="Audiobook">🎧 Audiobook</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="editBookSeries">Série (optionnel)</label>
+                    <input type="text" id="editBookSeries">
+                </div>
+                <div class="input-group">
+                    <label for="editBookTome">Tome n°</label>
+                    <input type="number" id="editBookTome" min="1">
+                </div>
+            </div>
+            <button type="button" class="btn btn-confirm" onclick="confirmEditBook()">✅ Sauvegarder</button>
+        </div>
+    </div>
 
-<!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <!-- MODAL ÉDITION WISHLIST -->
+    <div class="modal-overlay" id="editWishModal">
+        <div class="modal modal-large">
+            <button class="modal-close" onclick="closeEditWishModal()">✕</button>
+            <h2>✏️ Modifier</h2>
+            <div class="input-group">
+                <label for="editWishTitle">Titre</label>
+                <input type="text" id="editWishTitle" required>
+            </div>
+            <div class="input-group">
+                <label for="editWishAuthor">Auteur</label>
+                <input type="text" id="editWishAuthor" required>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="editWishGenre">Genre</label>
+                    <select id="editWishGenre">
+                        <option value="Roman">📖 Roman</option>
+                        <option value="SF">🚀 SF</option>
+                        <option value="Fantasy">🐉 Fantasy</option>
+                        <option value="Fantastique">👻 Fantastique</option>
+                        <option value="Thriller">🔪 Thriller</option>
+                        <option value="Thriller psy">🧠 Thriller psy</option>
+                        <option value="Policier">🕵️ Policier</option>
+                        <option value="Romance">💕 Romance</option>
+                        <option value="Dark Romance">🖤 Dark Romance</option>
+                        <option value="Young Adult">🌟 Young Adult</option>
+                        <option value="Jeunesse">🧸 Jeunesse</option>
+                        <option value="BD">🎨 BD</option>
+                        <option value="Manga">🏯 Manga</option>
+                        <option value="Biographie">📋 Biographie</option>
+                        <option value="Philosophie">💭 Philosophie</option>
+                        <option value="Poésie">🌸 Poésie</option>
+                        <option value="Histoire">🏛️ Histoire</option>
+                        <option value="Dev perso">🧠 Dév. perso</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editWishFormat">Format</label>
+                    <select id="editWishFormat">
+                        <option value="Broché">📕 Broché</option>
+                        <option value="Poche">📒 Poche</option>
+                        <option value="Collector">✨ Collector</option>
+                        <option value="Relié">📗 Relié</option>
+                        <option value="Audiobook">🎧 Audiobook</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editWishPriority">Priorité</label>
+                    <select id="editWishPriority">
+                        <option value="3">🔴 Haute</option>
+                        <option value="2">🟡 Moyenne</option>
+                        <option value="1">🟢 Basse</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="editWishSeries">Série (optionnel)</label>
+                    <input type="text" id="editWishSeries">
+                </div>
+                <div class="input-group">
+                    <label for="editWishTome">Tome n°</label>
+                    <input type="number" id="editWishTome" min="1">
+                </div>
+                <div class="input-group">
+                    <label for="editWishPrice">Prix (€)</label>
+                    <input type="number" id="editWishPrice" min="0" step="0.01">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="editWishNotes">Notes</label>
+                <input type="text" id="editWishNotes">
+            </div>
+            <button type="button" class="btn btn-confirm" onclick="confirmEditWish()">✅ Sauvegarder</button>
+        </div>
+    </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCEJvY_9h3JAqZI5wHJd0SSUrEKfu9Ch7M",
-  authDomain: "pile-a-lire-ec70b.firebaseapp.com",
-  projectId: "pile-a-lire-ec70b",
-  storageBucket: "pile-a-lire-ec70b.appspot.com",
-  messagingSenderId: "283870126026",
-  appId: "1:283870126026:web:d18c5a0e56843bb5a03933"
-};
+    <!-- MODAL ÉDITION EXTERNAL -->
+    <div class="modal-overlay" id="editExtModal">
+        <div class="modal modal-large">
+            <button class="modal-close" onclick="closeEditExtModal()">✕</button>
+            <h2>✏️ Modifier</h2>
+            <div class="input-group">
+                <label for="editExtTitle">Titre</label>
+                <input type="text" id="editExtTitle" required>
+            </div>
+            <div class="input-group">
+                <label for="editExtAuthor">Auteur</label>
+                <input type="text" id="editExtAuthor" required>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="editExtGenre">Genre</label>
+                    <select id="editExtGenre">
+                        <option value="Roman">📖 Roman</option>
+                        <option value="SF">🚀 Science-Fiction</option>
+                        <option value="Fantasy">🐉 Fantasy</option>
+                        <option value="Fantastique">👻 Fantastique</option>
+                        <option value="Thriller">🔪 Thriller</option>
+                        <option value="Thriller psy">🧠 Thriller psy</option>
+                        <option value="Policier">🕵️ Policier</option>
+                        <option value="Romance">💕 Romance</option>
+                        <option value="Dark Romance">🖤 Dark Romance</option>
+                        <option value="Young Adult">🌟 Young Adult</option>
+                        <option value="Jeunesse">🧸 Jeunesse</option>
+                        <option value="BD">🎨 BD</option>
+                        <option value="Manga">🏯 Manga</option>
+                        <option value="Biographie">📋 Biographie</option>
+                        <option value="Philosophie">💭 Philosophie</option>
+                        <option value="Poésie">🌸 Poésie</option>
+                        <option value="Histoire">🏛️ Histoire</option>
+                        <option value="Dev perso">🧠 Dév. personnel</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editExtSource">Provenance</label>
+                    <select id="editExtSource">
+                        <option value="Bibliothèque">🏛️ Bibliothèque</option>
+                        <option value="Internet">💻 Internet</option>
+                        <option value="École">🎓 École</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="editExtSeries">Série (optionnel)</label>
+                    <input type="text" id="editExtSeries">
+                </div>
+                <div class="input-group">
+                    <label for="editExtTome">Tome n°</label>
+                    <input type="number" id="editExtTome" min="1">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="editExtNotes">Notes</label>
+                <input type="text" id="editExtNotes">
+            </div>
+            <button type="button" class="btn btn-confirm" onclick="confirmEditExt()">✅ Sauvegarder</button>
+        </div>
+    </div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    <footer><p>📚 Ma Pile à Livres v11.0 — Fait avec ❤️ — 2025</p></footer>
 
-window.firebaseAuth = auth;
-window.firebaseDb = db;
-window.firebaseCreateUser = createUserWithEmailAndPassword;
-window.firebaseSignIn = signInWithEmailAndPassword;
-window.firebaseSignOut = signOut;
-window.firebaseOnAuthChanged = onAuthStateChanged;
-window.firebaseDoc = doc;
-window.firebaseSetDoc = setDoc;
-window.firebaseGetDoc = getDoc;
+    <!-- FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-document.dispatchEvent(new Event('firebaseReady'));
-</script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCEJvY_9h3JAqZI5wHJd0SSUrEKfu9Ch7M",
+            authDomain: "pile-a-lire-ec70b.firebaseapp.com",
+            projectId: "pile-a-lire-ec70b",
+            storageBucket: "pile-a-lire-ec70b.appspot.com",
+            messagingSenderId: "283870126026",
+            appId: "1:283870126026:web:d18c5a0e56843bb5a03933"
+        };
 
-        </script>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseCreateUser = createUserWithEmailAndPassword;
+        window.firebaseSignIn = signInWithEmailAndPassword;
+        window.firebaseSignOut = signOut;
+        window.firebaseOnAuthChanged = onAuthStateChanged;
+        window.firebaseDoc = doc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseGetDoc = getDoc;
+
+        document.dispatchEvent(new Event('firebaseReady'));
+    </script>
 
     <script src="script.js"></script>
-
 </body>
 </html>
