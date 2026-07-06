@@ -1243,9 +1243,9 @@ function updateStats() {
     for (var e = 0; e < external.length; e++) {
         if (external[e].rating > 0) { rSum += external[e].rating; rCount++; }
     }
-// Compte tous les livres externes (peu importe leur status car tous ont été lus)
-var extReadCount = external.length;
-    }
+    // Compte tous les livres externes (peu importe leur status car tous ont été lus)
+    var extReadCount = external.length;
+
     document.getElementById('toReadBooks').textContent = toRead;
     document.getElementById('readBooks').textContent = read;
     document.getElementById('externalCount').textContent = external.length;
@@ -1269,6 +1269,7 @@ var extReadCount = external.length;
     document.getElementById('wishlistBought').textContent = wBought;
     document.getElementById('wishlistBudget').textContent = budget.toFixed(2) + ' €';
     document.getElementById('wishlistSpent').textContent = spent.toFixed(2) + ' €';
+}
 
 function showToast(msg) {
     var ex = document.querySelector('.toast');
