@@ -1,5 +1,10 @@
 /* ============================================================
-   VARIABLES DE THÈME
+   MA PILE À LIVRES — STYLES v11.3
+   Optimisé : variables, structure claire, responsive
+   ============================================================ */
+
+/* ============================================================
+   THÈMES DE COULEURS
    ============================================================ */
 [data-theme="purple"] {
     --bg-1: #0f0c29; --bg-2: #302b63; --bg-3: #24243e;
@@ -114,20 +119,31 @@
    VARIABLES GLOBALES
    ============================================================ */
 :root {
+    /* Radius */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 15px;
     --radius-xl: 20px;
     --radius-pill: 50px;
+
+    /* Transitions */
     --transition: .3s ease;
+
+    /* Glass effect */
     --glass-bg: rgba(255, 255, 255, .05);
     --glass-border: rgba(255, 255, 255, .1);
     --glass-hover: rgba(255, 255, 255, .08);
+
+    /* Shadows */
     --shadow-md: 0 8px 25px rgba(0, 0, 0, .3);
     --shadow-lg: 0 10px 30px rgba(0, 0, 0, .3);
+
+    /* Textes */
     --color-muted: #aaa;
     --color-text: #e0e0e0;
     --color-white: #fff;
+
+    /* États */
     --color-danger: #f5576c;
     --color-warning: #ef5350;
     --color-gold: #ffd700;
@@ -212,7 +228,10 @@ body {
     cursor: pointer;
     transition: color var(--transition), background var(--transition);
 }
-.nav-btn:hover { color: var(--color-white); background: var(--glass-hover); }
+.nav-btn:hover {
+    color: var(--color-white);
+    background: var(--glass-hover);
+}
 .nav-btn.active {
     background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
     color: var(--color-white);
@@ -352,7 +371,6 @@ section h2 {
     min-width: 170px;
 }
 
-/* Classe utilitaire pour largeur 100% */
 .input-full { flex: 1 1 100%; }
 
 .input-group label {
@@ -362,7 +380,6 @@ section h2 {
     margin-bottom: 5px;
 }
 
-/* Label optionnel */
 .optional-label {
     font-size: .75rem;
     color: #666;
@@ -389,11 +406,9 @@ section h2 {
     box-shadow: 0 0 15px rgba(255, 255, 255, .1);
 }
 
-/* Correction : input type search — suppression de l'icône native sur webkit */
 .input-group input[type="search"]::-webkit-search-decoration,
 .input-group input[type="search"]::-webkit-search-cancel-button { display: none; }
 
-/* Correction : input type date — forcer la couleur sur navigateurs webkit */
 .input-group input[type="date"],
 .date-row .input-group input[type="date"] {
     color-scheme: dark;
@@ -410,8 +425,8 @@ section h2 {
     font-style: italic;
 }
 
-.saga-input-group  { flex: 2; }
-.tome-input-group  { flex: .7; min-width: 100px; }
+.saga-input-group { flex: 2; }
+.tome-input-group { flex: .7; min-width: 100px; }
 
 .checkbox-label {
     display: flex;
@@ -460,7 +475,6 @@ section h2 {
 
 .btn:active { transform: translateY(0); }
 
-/* Variantes */
 .btn-add,
 .btn-add-wish,
 .btn-add-ext {
@@ -520,7 +534,10 @@ section h2 {
    SECTION RANDOM
    ============================================================ */
 .random-section { text-align: center; }
-.random-section > p { color: var(--color-muted); margin-bottom: 15px; }
+.random-section > p {
+    color: var(--color-muted);
+    margin-bottom: 15px;
+}
 
 .random-filter {
     margin-bottom: 20px;
@@ -578,7 +595,10 @@ section h2 {
     cursor: pointer;
     transition: background var(--transition), color var(--transition);
 }
-.filter-btn:hover { background: var(--glass-hover); color: var(--color-white); }
+.filter-btn:hover {
+    background: var(--glass-hover);
+    color: var(--color-white);
+}
 .filter-btn.active {
     background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
     color: var(--color-white);
@@ -619,7 +639,6 @@ section h2 {
     border-color: var(--accent-1);
     box-shadow: 0 0 15px rgba(255, 255, 255, .08);
 }
-/* Suppression icône native search */
 .search-bar input[type="search"]::-webkit-search-decoration,
 .search-bar input[type="search"]::-webkit-search-cancel-button { display: none; }
 
@@ -674,15 +693,15 @@ section h2 {
 }
 
 /* Couleurs des barres selon statut */
-.book-card.to-read::before       { background: linear-gradient(180deg, var(--accent-1), var(--accent-2)); }
-.book-card.read::before          { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
-.book-card.wish-to-buy::before   { background: linear-gradient(180deg, var(--wish-1), var(--wish-2)); }
-.book-card.wish-bought::before   { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
-.book-card.ext-returned::before  { background: linear-gradient(180deg, #999, #666); }
-.book-card.ext-given::before     { background: linear-gradient(180deg, #f48fb1, #e91e63); }
-.book-card.ext-kept::before      { background: linear-gradient(180deg, #ffd54f, #f57c00); }
-.saga-card::before               { background: linear-gradient(180deg, var(--saga-1), var(--saga-2)); }
-.author-card::before             { background: linear-gradient(180deg, var(--accent-1), var(--accent-2)); }
+.book-card.to-read::before      { background: linear-gradient(180deg, var(--accent-1), var(--accent-2)); }
+.book-card.read::before         { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
+.book-card.wish-to-buy::before  { background: linear-gradient(180deg, var(--wish-1), var(--wish-2)); }
+.book-card.wish-bought::before  { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
+.book-card.ext-returned::before { background: linear-gradient(180deg, #999, #666); }
+.book-card.ext-given::before    { background: linear-gradient(180deg, #f48fb1, #e91e63); }
+.book-card.ext-kept::before     { background: linear-gradient(180deg, #ffd54f, #f57c00); }
+.saga-card::before              { background: linear-gradient(180deg, var(--saga-1), var(--saga-2)); }
+.author-card::before            { background: linear-gradient(180deg, var(--accent-1), var(--accent-2)); }
 
 /* Hover uniquement si animations activées */
 body:not(.no-animations) .book-card:hover,
@@ -692,7 +711,6 @@ body:not(.no-animations) .author-card:hover {
     box-shadow: var(--shadow-lg);
 }
 
-/* Désactivation animations */
 body.no-animations .book-card,
 body.no-animations .saga-card,
 body.no-animations .author-card {
@@ -700,7 +718,6 @@ body.no-animations .author-card {
     transition: none !important;
 }
 
-/* Titres & auteurs */
 .book-card h3,
 .saga-card h3,
 .author-card h3 {
@@ -718,7 +735,6 @@ body.no-animations .author-card {
     margin-bottom: 8px;
 }
 
-/* Bouton suppression */
 .delete-icon {
     position: absolute;
     top: 12px;
@@ -757,7 +773,6 @@ body.no-animations .author-card {
     margin-left: 5px;
 }
 
-/* Variantes status badge */
 .status-badge.to-read      { background: var(--glass-hover); color: var(--accent-1); }
 .status-badge.read         { background: var(--glass-hover); color: var(--success-1); }
 .status-badge.wish-to-buy  { background: var(--glass-hover); color: var(--wish-1); }
@@ -766,7 +781,6 @@ body.no-animations .author-card {
 .status-badge.ext-given    { background: rgba(244, 143, 177, .15); color: #f48fb1; }
 .status-badge.ext-kept     { background: rgba(255, 213, 79, .15); color: #ffd54f; }
 
-/* Étoiles */
 .book-card .stars {
     color: var(--color-gold);
     font-size: 1.2rem;
@@ -774,7 +788,6 @@ body.no-animations .author-card {
     letter-spacing: 2px;
 }
 
-/* Avis */
 .book-card .review {
     color: var(--color-muted);
     font-size: .85rem;
@@ -786,7 +799,6 @@ body.no-animations .author-card {
     border-left: 3px solid rgba(255, 215, 0, .3);
 }
 
-/* Prix */
 .price-tag {
     display: inline-block;
     padding: 3px 10px;
@@ -798,7 +810,6 @@ body.no-animations .author-card {
     margin-left: 5px;
 }
 
-/* Priorité */
 .priority-tag {
     display: inline-block;
     padding: 3px 10px;
@@ -811,7 +822,6 @@ body.no-animations .author-card {
 .priority-tag.medium { background: rgba(255, 183, 77, .2);  color: #ffb74d; }
 .priority-tag.low    { background: rgba(129, 199, 132, .2); color: #81c784; }
 
-/* Notes wishlist / externe */
 .wish-notes {
     color: #999;
     font-size: .8rem;
@@ -819,7 +829,6 @@ body.no-animations .author-card {
     font-style: italic;
 }
 
-/* Tome & saga */
 .tome-tag {
     display: inline-block;
     padding: 3px 10px;
@@ -830,6 +839,7 @@ body.no-animations .author-card {
     font-weight: 600;
     margin-left: 5px;
 }
+
 .saga-tag {
     display: inline-block;
     padding: 3px 10px;
@@ -840,7 +850,6 @@ body.no-animations .author-card {
     margin-left: 5px;
 }
 
-/* Source externe */
 .source-tag {
     display: inline-block;
     padding: 3px 10px;
@@ -852,7 +861,6 @@ body.no-animations .author-card {
     margin-left: 5px;
 }
 
-/* Wishlist */
 .want-buy-badge {
     display: inline-block;
     padding: 3px 10px;
@@ -864,7 +872,6 @@ body.no-animations .author-card {
     margin-left: 5px;
 }
 
-/* Groupe de tags */
 .wish-tags {
     display: flex;
     flex-wrap: wrap;
@@ -874,10 +881,21 @@ body.no-animations .author-card {
 }
 
 /* Formats */
-.format-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; margin-left: 5px; }
+.format-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+    margin-left: 5px;
+}
 .format-broche    { background: rgba(244, 143, 177, .15); color: #f48fb1; }
 .format-poche     { background: rgba(255, 213, 79, .15);  color: #ffd54f; }
-.format-collector { background: linear-gradient(135deg, rgba(255, 215, 0, .2), rgba(255, 152, 0, .2)); color: var(--color-gold); border: 1px solid rgba(255, 215, 0, .3); }
+.format-collector {
+    background: linear-gradient(135deg, rgba(255, 215, 0, .2), rgba(255, 152, 0, .2));
+    color: var(--color-gold);
+    border: 1px solid rgba(255, 215, 0, .3);
+}
 .format-relie     { background: rgba(129, 199, 132, .15); color: #81c784; }
 .format-audiobook { background: rgba(206, 147, 216, .15); color: #ce93d8; }
 
@@ -903,7 +921,6 @@ body.no-animations .author-card {
     transition: background var(--transition);
 }
 
-/* Variantes boutons d'action */
 .btn-mark-read  { background: var(--glass-hover); color: var(--success-1); }
 .btn-mark-read:hover { background: rgba(255, 255, 255, .15); }
 
@@ -928,17 +945,8 @@ body.no-animations .author-card {
 .btn-want-buy   { background: rgba(255, 154, 158, .2); color: var(--wish-1); }
 .btn-want-buy:hover { background: rgba(255, 154, 158, .35); }
 
-.btn-returned   { background: rgba(150, 150, 150, .2); color: #bbb; }
-.btn-returned:hover { background: rgba(150, 150, 150, .35); }
-
-.btn-given      { background: rgba(244, 143, 177, .2); color: #f48fb1; }
-.btn-given:hover { background: rgba(244, 143, 177, .35); }
-
-.btn-kept       { background: rgba(255, 213, 79, .2);  color: #ffd54f; }
-.btn-kept:hover  { background: rgba(255, 213, 79, .35); }
-
 .btn-edit       { background: rgba(102, 126, 234, .2); color: #667eea; }
-.btn-edit:hover  { background: rgba(102, 126, 234, .35); }
+.btn-edit:hover { background: rgba(102, 126, 234, .35); }
 
 /* ============================================================
    DATES DE LECTURE
@@ -967,9 +975,11 @@ body.no-animations .author-card {
     display: none;
 }
 .reading-days.active  { display: block; }
-.reading-days.warning { color: var(--color-warning); background: rgba(239, 83, 80, .08); }
+.reading-days.warning {
+    color: var(--color-warning);
+    background: rgba(239, 83, 80, .08);
+}
 
-/* Badge durée de lecture sur les cartes */
 .reading-info {
     display: inline-block;
     padding: 3px 10px;
@@ -990,7 +1000,7 @@ body.no-animations .author-card {
 }
 
 /* ============================================================
-   SAGAS
+   BANNIÈRES INFO
    ============================================================ */
 .auto-saga-info {
     max-width: 900px;
@@ -1013,10 +1023,20 @@ body.no-animations .author-card {
     border-color: rgba(78, 205, 196, .25);
 }
 .info-banner .info-icon { font-size: 2rem; flex-shrink: 0; }
-.info-banner strong { color: var(--color-white); display: block; margin-bottom: 4px; }
-.info-banner p { color: var(--color-muted); font-size: .85rem; margin: 0; }
+.info-banner strong {
+    color: var(--color-white);
+    display: block;
+    margin-bottom: 4px;
+}
+.info-banner p {
+    color: var(--color-muted);
+    font-size: .85rem;
+    margin: 0;
+}
 
-/* Infos saga */
+/* ============================================================
+   SAGAS — CARTES
+   ============================================================ */
 .saga-card .saga-info { margin: 10px 0; }
 .saga-card .saga-info span {
     display: inline-block;
@@ -1025,7 +1045,6 @@ body.no-animations .author-card {
     color: #bbb;
 }
 
-/* Barre de progression */
 .saga-card .progress-bar {
     width: 100%;
     height: 12px;
@@ -1048,7 +1067,6 @@ body.no-animations .author-card {
     margin-bottom: 5px;
 }
 
-/* Liste des tomes */
 .saga-card .tomes-list {
     margin-top: 10px;
     max-height: 200px;
@@ -1072,7 +1090,7 @@ body.no-animations .author-card {
     border-radius: var(--radius-sm);
     font-size: .85rem;
 }
-.tome-item .tome-title  { color: #ddd; flex: 1; }
+.tome-item .tome-title { color: #ddd; flex: 1; }
 .tome-item .tome-status {
     font-size: .75rem;
     padding: 2px 8px;
@@ -1097,14 +1115,18 @@ body.no-animations .author-card {
     margin-bottom: 10px;
 }
 .missing-icon  { font-size: 1.2rem; }
-.missing-label { font-size: .9rem; font-weight: 600; color: var(--color-warning); }
-.missing-list  { max-height: 150px; overflow-y: auto; }
+.missing-label {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--color-warning);
+}
+.missing-list { max-height: 150px; overflow-y: auto; }
 
 .missing-tome {
     border-left: 3px solid rgba(239, 83, 80, .4) !important;
     background: rgba(239, 83, 80, .05) !important;
 }
-.missing-title  { color: #999 !important; font-style: italic; }
+.missing-title { color: #999 !important; font-style: italic; }
 .missing-status {
     background: rgba(239, 83, 80, .15) !important;
     color: var(--color-warning) !important;
@@ -1112,7 +1134,10 @@ body.no-animations .author-card {
     padding: 2px 8px !important;
     border-radius: 10px !important;
 }
-.missing-count-tag { color: var(--color-warning) !important; font-weight: 600; }
+.missing-count-tag {
+    color: var(--color-warning) !important;
+    font-weight: 600;
+}
 
 /* Badges sagas */
 .saga-complete-badge {
@@ -1135,10 +1160,33 @@ body.no-animations .author-card {
     font-weight: 600;
     margin: 5px 0;
 }
+.saga-ext-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(78, 205, 196, .15);
+    color: var(--ext-1);
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 600;
+    margin: 5px 0;
+}
 
-.saga-has-missing  { border-color: rgba(239, 83, 80, .2) !important; }
-.saga-completed    { border-color: rgba(67, 233, 123, .2) !important; }
-.saga-completed::before { background: linear-gradient(180deg, var(--success-1), var(--success-2)) !important; }
+.saga-has-missing { border-color: rgba(239, 83, 80, .2) !important; }
+.saga-completed   { border-color: rgba(67, 233, 123, .2) !important; }
+.saga-completed::before {
+    background: linear-gradient(180deg, var(--success-1), var(--success-2)) !important;
+}
+
+/* Saga externe (empruntée) */
+.saga-external {
+    border-color: rgba(78, 205, 196, .25) !important;
+}
+.saga-external::before {
+    background: linear-gradient(180deg, var(--ext-1), var(--ext-2)) !important;
+}
+.saga-external .progress-fill {
+    background: linear-gradient(90deg, var(--ext-1), var(--ext-2)) !important;
+}
 
 /* ============================================================
    AUTEURS
@@ -1160,10 +1208,23 @@ body.no-animations .author-card {
     flex: 1;
     min-width: 55px;
 }
-.author-stat-num   { display: block; font-size: 1.1rem; font-weight: 700; color: var(--card-accent); }
-.author-stat-label { font-size: .68rem; color: #888; text-transform: uppercase; }
+.author-stat-num {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--card-accent);
+}
+.author-stat-label {
+    font-size: .68rem;
+    color: #888;
+    text-transform: uppercase;
+}
 
-.author-series { font-size: .8rem; color: var(--saga-1); margin: 5px 0; }
+.author-series {
+    font-size: .8rem;
+    color: var(--saga-1);
+    margin: 5px 0;
+}
 
 .author-books-container {
     max-height: 0;
@@ -1185,8 +1246,12 @@ body.no-animations .author-card {
     border-radius: var(--radius-sm);
     font-size: .85rem;
 }
-.ab-title  { color: #ddd; flex: 1; }
-.ab-status { font-size: .75rem; padding: 2px 8px; border-radius: 10px; }
+.ab-title { color: #ddd; flex: 1; }
+.ab-status {
+    font-size: .75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
 .ab-read   { background: rgba(67, 233, 123, .15); color: var(--success-1); }
 .ab-toread { background: var(--glass-hover); color: var(--accent-1); }
 .ab-ext    { background: rgba(78, 205, 196, .15); color: var(--ext-1); }
@@ -1268,7 +1333,10 @@ body.no-animations .author-card {
     outline: none;
     border-color: var(--accent-1);
 }
-.modal.modal-large .input-group select option { background: var(--bg-2); color: var(--color-white); }
+.modal.modal-large .input-group select option {
+    background: var(--bg-2);
+    color: var(--color-white);
+}
 
 .modal-close {
     position: absolute;
@@ -1313,7 +1381,6 @@ body.no-animations .author-card {
     text-shadow: 0 0 15px rgba(255, 215, 0, .5);
 }
 
-/* Textarea modale */
 .modal textarea {
     width: 100%;
     padding: 12px;
@@ -1328,10 +1395,16 @@ body.no-animations .author-card {
     margin-top: 10px;
     transition: border-color var(--transition);
 }
-.modal textarea:focus { outline: none; border-color: var(--color-gold); }
+.modal textarea:focus {
+    outline: none;
+    border-color: var(--color-gold);
+}
 
-/* Transfert */
-.transfer-desc { color: var(--color-muted); font-size: .9rem; margin-bottom: 15px; }
+.transfer-desc {
+    color: var(--color-muted);
+    font-size: .9rem;
+    margin-bottom: 15px;
+}
 .transfer-options { text-align: left; margin: 10px 0; }
 .transfer-option {
     display: flex;
@@ -1378,10 +1451,17 @@ body.no-animations .author-card {
 /* ============================================================
    PARAMÈTRES
    ============================================================ */
-.settings-section { max-width: 900px; margin: 20px auto; padding: 30px; }
-.settings-desc    { color: var(--color-muted); margin-bottom: 20px; font-size: .9rem; }
+.settings-section {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 30px;
+}
+.settings-desc {
+    color: var(--color-muted);
+    margin-bottom: 20px;
+    font-size: .9rem;
+}
 
-/* Grilles thème & police */
 .theme-grid,
 .font-grid {
     display: grid;
@@ -1436,8 +1516,7 @@ body.no-animations .author-card {
 .cyan-prev   { background: linear-gradient(135deg, #4db6ac, #00695c); }
 .gold-prev   { background: linear-gradient(135deg, #ffd54f, #a68b00); }
 
-/* Police */
-.font-card    { padding: 20px 15px; }
+.font-card { padding: 20px 15px; }
 .font-preview {
     font-size: 2.5rem;
     font-weight: 700;
@@ -1447,7 +1526,12 @@ body.no-animations .author-card {
     background-clip: text;
     line-height: 1;
 }
-.font-name { font-size: .85rem; color: #ccc; font-family: 'Poppins', sans-serif; font-weight: 500; }
+.font-name {
+    font-size: .85rem;
+    color: #ccc;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+}
 
 /* Toggle switch */
 .setting-row {
@@ -1459,10 +1543,25 @@ body.no-animations .author-card {
 }
 .setting-row:last-child { border-bottom: none; }
 
-.setting-label { display: block; font-weight: 500; color: #ddd; }
-.setting-hint  { display: block; font-size: .8rem; color: #888; margin-top: 2px; }
+.setting-label {
+    display: block;
+    font-weight: 500;
+    color: #ddd;
+}
+.setting-hint {
+    display: block;
+    font-size: .8rem;
+    color: #888;
+    margin-top: 2px;
+}
 
-.toggle { position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0; }
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
 .toggle input { opacity: 0; width: 0; height: 0; }
 .toggle-slider {
     position: absolute;
@@ -1483,21 +1582,31 @@ body.no-animations .author-card {
     border-radius: 50%;
     transition: transform var(--transition);
 }
-.toggle input:checked + .toggle-slider { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
-.toggle input:checked + .toggle-slider::before { transform: translateX(24px); }
+.toggle input:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+}
+.toggle input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+}
 
-/* Données */
-.data-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.data-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
-/* À propos */
 .about-card {
     background: rgba(255, 255, 255, .03);
     border-radius: var(--radius-md);
     padding: 20px;
     line-height: 1.8;
 }
-.about-card p  { color: #bbb; }
-.about-small   { font-size: .8rem; color: #777 !important; margin-top: 10px; }
+.about-card p { color: #bbb; }
+.about-small {
+    font-size: .8rem;
+    color: #777 !important;
+    margin-top: 10px;
+}
 
 /* ============================================================
    AUTHENTIFICATION FIREBASE
@@ -1528,9 +1637,8 @@ body.no-animations .author-card {
     border-color: transparent;
 }
 
-.auth-form        { display: none; }
+.auth-form { display: none; }
 .auth-form.active { display: block; }
-
 .auth-form .input-group { margin-bottom: 15px; }
 
 .user-info {
@@ -1553,12 +1661,25 @@ body.no-animations .author-card {
     justify-content: center;
     flex-shrink: 0;
 }
-.user-email  { font-weight: 600; color: var(--color-white); font-size: 1.05rem; margin: 0; }
-.user-status { color: var(--success-1); font-size: .85rem; margin-top: 4px; }
+.user-email {
+    font-weight: 600;
+    color: var(--color-white);
+    font-size: 1.05rem;
+    margin: 0;
+}
+.user-status {
+    color: var(--success-1);
+    font-size: .85rem;
+    margin-top: 4px;
+}
 .user-status.syncing { color: #ffb74d; }
 .user-status.error   { color: var(--color-warning); }
 
-.sync-actions { display: flex; flex-direction: column; gap: 10px; }
+.sync-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 .sync-actions .btn { justify-content: center; }
 
 /* ============================================================
@@ -1628,29 +1749,34 @@ footer {
         padding-right: 15px;
     }
 
-    .random-filter   { flex-direction: column; }
-    .btn-random      { font-size: .95rem; padding: 12px 25px; }
+    .random-filter { flex-direction: column; }
+    .btn-random    { font-size: .95rem; padding: 12px 25px; }
 
     .theme-grid,
-    .font-grid       { grid-template-columns: repeat(3, 1fr); }
+    .font-grid     { grid-template-columns: repeat(3, 1fr); }
 
-    .data-actions    { flex-direction: column; }
+    .data-actions      { flex-direction: column; }
     .data-actions .btn { width: 100%; justify-content: center; }
 
-    .main-nav        { gap: 3px; padding: 8px 5px; }
-    .nav-btn         { padding: 7px 10px; font-size: .7rem; }
+    .main-nav { gap: 3px; padding: 8px 5px; }
+    .nav-btn  { padding: 7px 10px; font-size: .7rem; }
 
-    .sort-bar        { flex-direction: column; align-items: flex-start; }
+    .sort-bar { flex-direction: column; align-items: flex-start; }
 
-    .auto-saga-info  { padding: 0 15px; }
-    .info-banner     { flex-direction: column; text-align: center; }
+    .auto-saga-info { padding: 0 15px; }
+    .info-banner    { flex-direction: column; text-align: center; }
 
-    .user-info       { flex-direction: column; text-align: center; }
+    .user-info { flex-direction: column; text-align: center; }
 
-    .modal           { padding: 25px 20px; }
-    .modal.modal-large { max-width: 100%; }
+    .modal              { padding: 25px 20px; }
+    .modal.modal-large  { max-width: 100%; }
 
-    .toast           { bottom: 15px; right: 15px; left: 15px; text-align: center; }
+    .toast {
+        bottom: 15px;
+        right: 15px;
+        left: 15px;
+        text-align: center;
+    }
 }
 
 @media (max-width: 400px) {
