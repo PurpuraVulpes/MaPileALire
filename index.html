@@ -4,36 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Ma Pile à Livres</title>
+
+    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
     <meta name="theme-color" content="#0f0c29">
-    <link rel="stylesheet" href="style.css">
+
+    <!-- SEO & accessibilité -->
+    <meta name="description" content="Organise tes lectures, découvre ton prochain livre ! Gère ta bibliothèque, tes sagas, tes auteurs et ta wishlist.">
+
+    <!-- Preconnect pour performances Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;500;700&family=Open+Sans:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Dancing+Script:wght@400;600;700&family=Comfortaa:wght@300;400;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="particles" id="particles"></div>
+    <!-- Particules décoratives -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
 
-    <nav class="main-nav">
-        <button class="nav-btn active" onclick="switchTab('home', this)">📚 Bibliothèque</button>
-        <button class="nav-btn" onclick="switchTab('external', this)">📖 Empruntés/Lus</button>
-        <button class="nav-btn" onclick="switchTab('sagas', this)">📚 Sagas</button>
-        <button class="nav-btn" onclick="switchTab('authors', this)">✍️ Auteurs</button>
-        <button class="nav-btn" onclick="switchTab('wishlist', this)">🛒 À acheter</button>
-        <button class="nav-btn" onclick="switchTab('settings', this)">⚙️ Paramètres</button>
+    <!-- Navigation principale -->
+    <nav class="main-nav" role="navigation" aria-label="Navigation principale">
+        <button class="nav-btn active" data-tab="home" type="button">📚 Bibliothèque</button>
+        <button class="nav-btn" data-tab="external" type="button">📖 Empruntés/Lus</button>
+        <button class="nav-btn" data-tab="sagas" type="button">📚 Sagas</button>
+        <button class="nav-btn" data-tab="authors" type="button">✍️ Auteurs</button>
+        <button class="nav-btn" data-tab="wishlist" type="button">🛒 À acheter</button>
+        <button class="nav-btn" data-tab="settings" type="button">⚙️ Paramètres</button>
     </nav>
 
-    <!-- PAGE HOME -->
+    <!-- ============================================================ -->
+    <!--  PAGE HOME — BIBLIOTHÈQUE                                    -->
+    <!-- ============================================================ -->
     <div class="page active" id="page-home">
         <header>
-            <div class="logo">📚</div>
+            <div class="logo" aria-hidden="true">📚</div>
             <h1>Ma Pile à Livres</h1>
             <p class="subtitle">Organise tes lectures, découvre ton prochain livre !</p>
         </header>
 
-        <section class="stats-bar">
+        <section class="stats-bar" aria-label="Statistiques bibliothèque">
             <div class="stat"><span class="stat-number" id="totalBooks">0</span><span class="stat-label">Ma biblio</span></div>
             <div class="stat"><span class="stat-number" id="toReadBooks">0</span><span class="stat-label">À lire</span></div>
             <div class="stat"><span class="stat-number" id="readBooks">0</span><span class="stat-label">Lus</span></div>
@@ -47,17 +62,17 @@
             <div class="stat"><span class="stat-number" id="wishlistCount">0</span><span class="stat-label">À acheter</span></div>
         </section>
 
-        <section class="add-section">
+        <section class="add-section" aria-label="Ajouter un livre">
             <h2>➕ Ajouter un livre</h2>
-            <form id="addBookForm">
+            <form id="addBookForm" novalidate>
                 <div class="form-row">
                     <div class="input-group">
                         <label for="bookTitle">Titre</label>
-                        <input type="text" id="bookTitle" placeholder="Ex : L'Œil du Monde" required>
+                        <input type="text" id="bookTitle" placeholder="Ex : L'Œil du Monde" required autocomplete="off">
                     </div>
                     <div class="input-group">
                         <label for="bookAuthor">Auteur</label>
-                        <input type="text" id="bookAuthor" placeholder="Ex : Robert Jordan" required>
+                        <input type="text" id="bookAuthor" placeholder="Ex : Robert Jordan" required autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">
@@ -97,47 +112,47 @@
                 </div>
                 <div class="form-row">
                     <div class="input-group saga-input-group">
-                        <label for="bookSeries">Série / Saga (optionnel)</label>
-                        <input type="text" id="bookSeries" placeholder="Ex : La Roue du Temps" list="seriesSuggestions" oninput="updateSeriesSuggestions()">
+                        <label for="bookSeries">Série / Saga <span class="optional-label">(optionnel)</span></label>
+                        <input type="text" id="bookSeries" placeholder="Ex : La Roue du Temps" list="seriesSuggestions" autocomplete="off">
                         <datalist id="seriesSuggestions"></datalist>
                         <span class="input-hint">💡 Même nom = regroupement automatique</span>
                     </div>
                     <div class="input-group tome-input-group">
                         <label for="bookTome">Tome n°</label>
-                        <input type="number" id="bookTome" placeholder="1" min="1">
+                        <input type="number" id="bookTome" placeholder="1" min="1" inputmode="numeric">
                     </div>
                     <div class="input-group">
                         <label for="bookTotalTomes">Tomes prévus</label>
-                        <input type="number" id="bookTotalTomes" placeholder="14" min="1">
+                        <input type="number" id="bookTotalTomes" placeholder="14" min="1" inputmode="numeric">
                     </div>
                 </div>
-                <button type="submit" class="btn btn-add"><span>📥</span> Ajouter à la pile</button>
+                <button type="submit" class="btn btn-add"><span aria-hidden="true">📥</span> Ajouter à la pile</button>
             </form>
         </section>
 
-        <section class="random-section">
+        <section class="random-section" aria-label="Choix aléatoire">
             <h2>🎲 Quel livre lire ?</h2>
             <p>Laisse le hasard décider pour toi !</p>
             <div class="random-filter">
-                <label>Genre :</label>
+                <label for="randomGenreFilter">Genre :</label>
                 <select id="randomGenreFilter"><option value="all">Tous</option></select>
             </div>
-            <button class="btn btn-random" id="randomBtn" onclick="pickRandomBook()">🎰 Choisir au hasard</button>
-            <div class="random-result" id="randomResult"></div>
+            <button class="btn btn-random" id="randomBtn" type="button">🎰 Choisir au hasard</button>
+            <div class="random-result" id="randomResult" aria-live="polite"></div>
         </section>
 
-        <section class="filter-section">
+        <section class="filter-section" aria-label="Filtres bibliothèque">
             <h2>📋 Ma bibliothèque</h2>
-            <div class="filters">
-                <button class="filter-btn active" onclick="filterBooks('all', this)">📚 Tous</button>
-                <button class="filter-btn" onclick="filterBooks('toRead', this)">📖 À lire</button>
-                <button class="filter-btn" onclick="filterBooks('read', this)">✅ Lus</button>
-                <button class="filter-btn" onclick="filterBooks('oneShot', this)">📕 One Shot</button>
-                <button class="filter-btn" onclick="filterBooks('series', this)">📚 Sagas</button>
+            <div class="filters" role="group" aria-label="Filtrer par statut">
+                <button class="filter-btn active" data-filter="all" data-target="home" type="button">📚 Tous</button>
+                <button class="filter-btn" data-filter="toRead" data-target="home" type="button">📖 À lire</button>
+                <button class="filter-btn" data-filter="read" data-target="home" type="button">✅ Lus</button>
+                <button class="filter-btn" data-filter="oneShot" data-target="home" type="button">📕 One Shot</button>
+                <button class="filter-btn" data-filter="series" data-target="home" type="button">📚 Sagas</button>
             </div>
             <div class="sort-bar">
-                <label>Trier :</label>
-                <select id="bookSortSelect" onchange="renderBooks()">
+                <label for="bookSortSelect">Trier :</label>
+                <select id="bookSortSelect">
                     <option value="default">Par défaut</option>
                     <option value="title">Titre A-Z</option>
                     <option value="author">Auteur A-Z</option>
@@ -147,22 +162,24 @@
                 </select>
             </div>
             <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="🔍 Rechercher..." oninput="renderBooks()">
+                <input type="search" id="searchInput" placeholder="🔍 Rechercher..." autocomplete="off">
             </div>
         </section>
 
-        <section class="books-list" id="booksList"></section>
+        <section class="books-list" id="booksList" aria-label="Liste des livres"></section>
     </div>
 
-    <!-- PAGE EXTERNAL -->
+    <!-- ============================================================ -->
+    <!--  PAGE EXTERNAL — EMPRUNTÉS / LUS AILLEURS                    -->
+    <!-- ============================================================ -->
     <div class="page" id="page-external">
         <header>
-            <div class="logo">📖</div>
+            <div class="logo" aria-hidden="true">📖</div>
             <h1>Livres Empruntés / Lus ailleurs</h1>
             <p class="subtitle">Livres lus à la bibliothèque, sur internet, à l'école...</p>
         </header>
 
-        <section class="stats-bar">
+        <section class="stats-bar" aria-label="Statistiques externes">
             <div class="stat"><span class="stat-number" id="extTotal">0</span><span class="stat-label">Total</span></div>
             <div class="stat"><span class="stat-number" id="extReturned">0</span><span class="stat-label">📤 Retirés</span></div>
             <div class="stat"><span class="stat-number" id="extGiven">0</span><span class="stat-label">🎁 Rendus</span></div>
@@ -173,9 +190,9 @@
             <div class="stat"><span class="stat-number" id="extTomesCount">0</span><span class="stat-label">Tomes ext.</span></div>
         </section>
 
-        <section class="auto-saga-info">
+        <section class="auto-saga-info" aria-label="Information">
             <div class="info-banner ext-banner">
-                <span class="info-icon">💡</span>
+                <span class="info-icon" aria-hidden="true">💡</span>
                 <div>
                     <strong>Livres externes à ta collection</strong>
                     <p>Comptés dans tes stats mais pas dans ta bibliothèque perso ni dans les sagas. Coche "je veux l'acheter" pour l'ajouter à la wishlist !</p>
@@ -183,17 +200,17 @@
             </div>
         </section>
 
-        <section class="add-section">
+        <section class="add-section" aria-label="Ajouter un livre externe">
             <h2>➕ Ajouter un livre externe</h2>
-            <form id="addExtForm">
+            <form id="addExtForm" novalidate>
                 <div class="form-row">
                     <div class="input-group">
                         <label for="extTitle">Titre</label>
-                        <input type="text" id="extTitle" placeholder="Ex : Les Misérables" required>
+                        <input type="text" id="extTitle" placeholder="Ex : Les Misérables" required autocomplete="off">
                     </div>
                     <div class="input-group">
                         <label for="extAuthor">Auteur</label>
-                        <input type="text" id="extAuthor" placeholder="Ex : Victor Hugo" required>
+                        <input type="text" id="extAuthor" placeholder="Ex : Victor Hugo" required autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">
@@ -232,13 +249,17 @@
                 </div>
                 <div class="form-row">
                     <div class="input-group">
-                        <label for="extSeries">Série (optionnel)</label>
-                        <input type="text" id="extSeries" placeholder="Ex : Harry Potter">
+                        <label for="extSeries">Série <span class="optional-label">(optionnel)</span></label>
+                        <input type="text" id="extSeries" placeholder="Ex : Harry Potter" autocomplete="off">
                         <span class="input-hint">💡 Non répertoriée dans l'onglet Sagas</span>
                     </div>
                     <div class="input-group tome-input-group">
                         <label for="extTome">Tome n°</label>
-                        <input type="number" id="extTome" placeholder="1" min="1">
+                        <input type="number" id="extTome" placeholder="1" min="1" inputmode="numeric">
+                    </div>
+                    <div class="input-group tome-input-group">
+                        <label for="extTotalTomes">Tomes prévus</label>
+                        <input type="number" id="extTotalTomes" placeholder="7" min="1" inputmode="numeric">
                     </div>
                     <div class="input-group">
                         <label for="extStatus">Statut</label>
@@ -250,34 +271,34 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group" style="flex:1 1 100%">
-                        <label for="extNotes">Notes (optionnel)</label>
-                        <input type="text" id="extNotes" placeholder="Ex : Prêté par Alice...">
+                    <div class="input-group input-full">
+                        <label for="extNotes">Notes <span class="optional-label">(optionnel)</span></label>
+                        <input type="text" id="extNotes" placeholder="Ex : Prêté par Alice..." autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group" style="flex:1 1 100%">
+                    <div class="input-group input-full">
                         <label class="checkbox-label">
                             <input type="checkbox" id="extWantToBuy">
                             <span>🛒 J'aimerais l'acheter (ajout automatique à la wishlist)</span>
                         </label>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-add-ext"><span>📖</span> Ajouter</button>
+                <button type="submit" class="btn btn-add-ext"><span aria-hidden="true">📖</span> Ajouter</button>
             </form>
         </section>
 
-        <section class="filter-section">
-            <div class="filters">
-                <button class="filter-btn active" onclick="filterExt('all', this)">📖 Tous</button>
-                <button class="filter-btn" onclick="filterExt('returned', this)">📤 Retirés</button>
-                <button class="filter-btn" onclick="filterExt('given', this)">🎁 Rendus</button>
-                <button class="filter-btn" onclick="filterExt('kept', this)">📚 Laissés</button>
-                <button class="filter-btn" onclick="filterExt('wantToBuy', this)">🛒 À acheter</button>
+        <section class="filter-section" aria-label="Filtres externes">
+            <div class="filters" role="group" aria-label="Filtrer par statut">
+                <button class="filter-btn active" data-filter="all" data-target="external" type="button">📖 Tous</button>
+                <button class="filter-btn" data-filter="returned" data-target="external" type="button">📤 Retirés</button>
+                <button class="filter-btn" data-filter="given" data-target="external" type="button">🎁 Rendus</button>
+                <button class="filter-btn" data-filter="kept" data-target="external" type="button">📚 Laissés</button>
+                <button class="filter-btn" data-filter="wantToBuy" data-target="external" type="button">🛒 À acheter</button>
             </div>
             <div class="sort-bar">
-                <label>Trier :</label>
-                <select id="extSortSelect" onchange="renderExternal()">
+                <label for="extSortSelect">Trier :</label>
+                <select id="extSortSelect">
                     <option value="default">Par défaut</option>
                     <option value="title">Titre A-Z</option>
                     <option value="author">Auteur A-Z</option>
@@ -287,31 +308,33 @@
                 </select>
             </div>
             <div class="search-bar">
-                <input type="text" id="extSearchInput" placeholder="🔍 Rechercher..." oninput="renderExternal()">
+                <input type="search" id="extSearchInput" placeholder="🔍 Rechercher..." autocomplete="off">
             </div>
         </section>
 
-        <section class="books-list" id="externalList"></section>
+        <section class="books-list" id="externalList" aria-label="Liste des livres externes"></section>
     </div>
 
-    <!-- PAGE SAGAS -->
+    <!-- ============================================================ -->
+    <!--  PAGE SAGAS                                                   -->
+    <!-- ============================================================ -->
     <div class="page" id="page-sagas">
         <header>
-            <div class="logo">📚</div>
+            <div class="logo" aria-hidden="true">📚</div>
             <h1>Mes Sagas</h1>
             <p class="subtitle">Générées automatiquement à partir de ta bibliothèque</p>
         </header>
 
-        <section class="stats-bar">
+        <section class="stats-bar" aria-label="Statistiques sagas">
             <div class="stat"><span class="stat-number" id="sagasTotalStat">0</span><span class="stat-label">📚 Sagas totales</span></div>
             <div class="stat"><span class="stat-number" id="sagasCompletedStat">0</span><span class="stat-label">✅ Terminées</span></div>
             <div class="stat"><span class="stat-number" id="sagasInProgressStat">0</span><span class="stat-label">🔄 En cours</span></div>
             <div class="stat"><span class="stat-number" id="sagasTotalTomes">0</span><span class="stat-label">📖 Tomes possédés</span></div>
         </section>
 
-        <section class="auto-saga-info">
+        <section class="auto-saga-info" aria-label="Information sagas">
             <div class="info-banner">
-                <span class="info-icon">💡</span>
+                <span class="info-icon" aria-hidden="true">💡</span>
                 <div>
                     <strong>Les sagas se créent automatiquement !</strong>
                     <p>Uniquement les livres de ta bibliothèque perso sont regroupés ici.</p>
@@ -319,39 +342,41 @@
             </div>
         </section>
 
-        <section class="filter-section">
-            <div class="filters">
-                <button class="filter-btn active" onclick="filterSagas('all', this)">📚 Toutes</button>
-                <button class="filter-btn" onclick="filterSagas('inProgress', this)">🔄 En cours</button>
-                <button class="filter-btn" onclick="filterSagas('completed', this)">✅ Terminées</button>
-                <button class="filter-btn" onclick="filterSagas('notStarted', this)">⏳ Pas commencées</button>
+        <section class="filter-section" aria-label="Filtres sagas">
+            <div class="filters" role="group" aria-label="Filtrer par avancement">
+                <button class="filter-btn active" data-filter="all" data-target="sagas" type="button">📚 Toutes</button>
+                <button class="filter-btn" data-filter="inProgress" data-target="sagas" type="button">🔄 En cours</button>
+                <button class="filter-btn" data-filter="completed" data-target="sagas" type="button">✅ Terminées</button>
+                <button class="filter-btn" data-filter="notStarted" data-target="sagas" type="button">⏳ Pas commencées</button>
             </div>
             <div class="search-bar">
-                <input type="text" id="sagaSearchInput" placeholder="🔍 Rechercher..." oninput="renderSagas()">
+                <input type="search" id="sagaSearchInput" placeholder="🔍 Rechercher..." autocomplete="off">
             </div>
         </section>
 
-        <section class="sagas-list" id="sagasList"></section>
+        <section class="sagas-list" id="sagasList" aria-label="Liste des sagas"></section>
     </div>
 
-    <!-- PAGE AUTHORS -->
+    <!-- ============================================================ -->
+    <!--  PAGE AUTHORS — AUTEURS                                       -->
+    <!-- ============================================================ -->
     <div class="page" id="page-authors">
         <header>
-            <div class="logo">✍️</div>
+            <div class="logo" aria-hidden="true">✍️</div>
             <h1>Mes Auteurs</h1>
             <p class="subtitle">Tous les auteurs de ta biblio + livres externes</p>
         </header>
 
-        <section class="stats-bar">
+        <section class="stats-bar" aria-label="Statistiques auteurs">
             <div class="stat"><span class="stat-number" id="authorsTotal">0</span><span class="stat-label">Auteurs</span></div>
             <div class="stat"><span class="stat-number" id="authorTopName">-</span><span class="stat-label">Top auteur</span></div>
             <div class="stat"><span class="stat-number" id="authorTopCount">0</span><span class="stat-label">Livres du top</span></div>
         </section>
 
-        <section class="filter-section">
+        <section class="filter-section" aria-label="Filtres auteurs">
             <div class="sort-bar">
-                <label>Trier :</label>
-                <select id="authorSortSelect" onchange="renderAuthors()">
+                <label for="authorSortSelect">Trier :</label>
+                <select id="authorSortSelect">
                     <option value="count">Nb livres ↓</option>
                     <option value="name">Nom A-Z</option>
                     <option value="rating">Note ↓</option>
@@ -359,292 +384,367 @@
                 </select>
             </div>
             <div class="search-bar">
-                <input type="text" id="authorSearchInput" placeholder="🔍 Rechercher..." oninput="renderAuthors()">
+                <input type="search" id="authorSearchInput" placeholder="🔍 Rechercher..." autocomplete="off">
             </div>
         </section>
 
-        <section class="authors-list" id="authorsList"></section>
+        <section class="authors-list" id="authorsList" aria-label="Liste des auteurs"></section>
     </div>
 
-    <!-- PAGE WISHLIST -->
+    <!-- ============================================================ -->
+    <!--  PAGE WISHLIST — LISTE D'ACHATS                               -->
+    <!-- ============================================================ -->
     <div class="page" id="page-wishlist">
         <header>
-            <div class="logo">🛒</div>
+            <div class="logo" aria-hidden="true">🛒</div>
             <h1>Ma Liste d'Achats</h1>
             <p class="subtitle">Les livres que tu veux acquérir</p>
         </header>
 
-        <section class="stats-bar">
+        <section class="stats-bar" aria-label="Statistiques wishlist">
             <div class="stat"><span class="stat-number" id="wishlistTotal">0</span><span class="stat-label">À acheter</span></div>
             <div class="stat"><span class="stat-number" id="wishlistBought">0</span><span class="stat-label">Achetés</span></div>
             <div class="stat"><span class="stat-number" id="wishlistBudget">0 €</span><span class="stat-label">Budget</span></div>
             <div class="stat"><span class="stat-number" id="wishlistSpent">0 €</span><span class="stat-label">Dépensé</span></div>
         </section>
 
-        <section class="add-section">
+        <section class="add-section" aria-label="Ajouter à la wishlist">
             <h2>➕ Ajouter à la liste d'achats</h2>
-            <form id="addWishlistForm">
+            <form id="addWishlistForm" novalidate>
                 <div class="form-row">
-                    <div class="input-group"><label for="wishTitle">Titre</label><input type="text" id="wishTitle" placeholder="Ex : Dune" required></div>
-                    <div class="input-group"><label for="wishAuthor">Auteur</label><input type="text" id="wishAuthor" placeholder="Ex : Frank Herbert" required></div>
+                    <div class="input-group">
+                        <label for="wishTitle">Titre</label>
+                        <input type="text" id="wishTitle" placeholder="Ex : Dune" required autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label for="wishAuthor">Auteur</label>
+                        <input type="text" id="wishAuthor" placeholder="Ex : Frank Herbert" required autocomplete="off">
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="input-group">
                         <label for="wishGenre">Genre</label>
                         <select id="wishGenre">
-                            <option value="Roman">📖 Roman</option><option value="SF">🚀 SF</option><option value="Fantasy">🐉 Fantasy</option>
-                            <option value="Fantastique">👻 Fantastique</option><option value="Thriller">🔪 Thriller</option>
-                            <option value="Thriller psy">🧠 Thriller psy</option><option value="Policier">🕵️ Policier</option>
-                            <option value="Romance">💕 Romance</option><option value="Dark Romance">🖤 Dark Romance</option>
+                            <option value="Roman">📖 Roman</option>
+                            <option value="SF">🚀 SF</option>
+                            <option value="Fantasy">🐉 Fantasy</option>
+                            <option value="Fantastique">👻 Fantastique</option>
+                            <option value="Thriller">🔪 Thriller</option>
+                            <option value="Thriller psy">🧠 Thriller psy</option>
+                            <option value="Policier">🕵️ Policier</option>
+                            <option value="Romance">💕 Romance</option>
+                            <option value="Dark Romance">🖤 Dark Romance</option>
                             <option value="Young Adult">🌟 Young Adult</option>
-                            <option value="Jeunesse">🧸 Jeunesse</option><option value="BD">🎨 BD</option><option value="Manga">🏯 Manga</option>
-                            <option value="Biographie">📋 Biographie</option><option value="Philosophie">💭 Philosophie</option>
-                            <option value="Poésie">🌸 Poésie</option><option value="Histoire">🏛️ Histoire</option>
+                            <option value="Jeunesse">🧸 Jeunesse</option>
+                            <option value="BD">🎨 BD</option>
+                            <option value="Manga">🏯 Manga</option>
+                            <option value="Biographie">📋 Biographie</option>
+                            <option value="Philosophie">💭 Philosophie</option>
+                            <option value="Poésie">🌸 Poésie</option>
+                            <option value="Histoire">🏛️ Histoire</option>
                             <option value="Dev perso">🧠 Dév. perso</option>
                         </select>
                     </div>
                     <div class="input-group">
                         <label for="wishFormat">Format</label>
                         <select id="wishFormat">
-                            <option value="Broché">📕 Broché</option><option value="Poche">📒 Poche</option>
-                            <option value="Collector">✨ Collector</option><option value="Relié">📗 Relié</option>
+                            <option value="Broché">📕 Broché</option>
+                            <option value="Poche">📒 Poche</option>
+                            <option value="Collector">✨ Collector</option>
+                            <option value="Relié">📗 Relié</option>
                             <option value="Audiobook">🎧 Audiobook</option>
                         </select>
                     </div>
                     <div class="input-group">
                         <label for="wishPriority">Priorité</label>
-                        <select id="wishPriority"><option value="3">🔴 Haute</option><option value="2" selected>🟡 Moyenne</option><option value="1">🟢 Basse</option></select>
+                        <select id="wishPriority">
+                            <option value="3">🔴 Haute</option>
+                            <option value="2" selected>🟡 Moyenne</option>
+                            <option value="1">🟢 Basse</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="input-group saga-input-group">
-                        <label for="wishSeries">Série (optionnel)</label>
-                        <input type="text" id="wishSeries" placeholder="Ex : Harry Potter" list="wishSeriesSuggestions">
+                        <label for="wishSeries">Série <span class="optional-label">(optionnel)</span></label>
+                        <input type="text" id="wishSeries" placeholder="Ex : Harry Potter" list="wishSeriesSuggestions" autocomplete="off">
                         <datalist id="wishSeriesSuggestions"></datalist>
                     </div>
-                    <div class="input-group tome-input-group"><label for="wishTome">Tome n°</label><input type="number" id="wishTome" placeholder="3" min="1"></div>
-                    <div class="input-group"><label for="wishPrice">Prix (€)</label><input type="number" id="wishPrice" placeholder="15" min="0" step="0.01"></div>
+                    <div class="input-group tome-input-group">
+                        <label for="wishTome">Tome n°</label>
+                        <input type="number" id="wishTome" placeholder="3" min="1" inputmode="numeric">
+                    </div>
+                    <div class="input-group">
+                        <label for="wishPrice">Prix (€)</label>
+                        <input type="number" id="wishPrice" placeholder="15" min="0" step="0.01" inputmode="decimal">
+                    </div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group" style="flex:1 1 100%"><label for="wishNotes">Notes (optionnel)</label><input type="text" id="wishNotes" placeholder="Ex : Vu chez Fnac..."></div>
+                    <div class="input-group input-full">
+                        <label for="wishNotes">Notes <span class="optional-label">(optionnel)</span></label>
+                        <input type="text" id="wishNotes" placeholder="Ex : Vu chez Fnac..." autocomplete="off">
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-add-wish"><span>🛒</span> Ajouter</button>
+                <button type="submit" class="btn btn-add-wish"><span aria-hidden="true">🛒</span> Ajouter</button>
             </form>
         </section>
 
-        <section class="filter-section">
-            <div class="filters">
-                <button class="filter-btn active" onclick="filterWishlist('all', this)">🛒 Tous</button>
-                <button class="filter-btn" onclick="filterWishlist('toBuy', this)">📋 À acheter</button>
-                <button class="filter-btn" onclick="filterWishlist('bought', this)">✅ Achetés</button>
+        <section class="filter-section" aria-label="Filtres wishlist">
+            <div class="filters" role="group" aria-label="Filtrer par statut">
+                <button class="filter-btn active" data-filter="all" data-target="wishlist" type="button">🛒 Tous</button>
+                <button class="filter-btn" data-filter="toBuy" data-target="wishlist" type="button">📋 À acheter</button>
+                <button class="filter-btn" data-filter="bought" data-target="wishlist" type="button">✅ Achetés</button>
             </div>
-            <div class="search-bar"><input type="text" id="wishSearchInput" placeholder="🔍 Rechercher..." oninput="renderWishlist()"></div>
+            <div class="search-bar">
+                <input type="search" id="wishSearchInput" placeholder="🔍 Rechercher..." autocomplete="off">
+            </div>
         </section>
 
-        <section class="books-list" id="wishlistList"></section>
+        <section class="books-list" id="wishlistList" aria-label="Liste wishlist"></section>
     </div>
 
-    <!-- PAGE SETTINGS -->
+    <!-- ============================================================ -->
+    <!--  PAGE SETTINGS — PARAMÈTRES                                   -->
+    <!-- ============================================================ -->
     <div class="page" id="page-settings">
         <header>
-            <div class="logo">⚙️</div>
+            <div class="logo" aria-hidden="true">⚙️</div>
             <h1>Paramètres</h1>
             <p class="subtitle">Personnalise ton expérience</p>
         </header>
 
-        <section class="settings-section" id="syncSection">
+        <section class="settings-section" id="syncSection" aria-label="Synchronisation cloud">
             <h2>☁️ Synchronisation Cloud</h2>
             <p class="settings-desc">Synchronise tes données entre tous tes appareils.</p>
             <div id="authNotLogged">
-                <div class="auth-tabs">
-                    <button class="auth-tab active" onclick="showAuthTab('login', this)">🔑 Connexion</button>
-                    <button class="auth-tab" onclick="showAuthTab('register', this)">📝 Inscription</button>
+                <div class="auth-tabs" role="tablist">
+                    <button class="auth-tab active" data-auth-tab="login" type="button" role="tab" aria-selected="true">🔑 Connexion</button>
+                    <button class="auth-tab" data-auth-tab="register" type="button" role="tab" aria-selected="false">📝 Inscription</button>
                 </div>
-                <div class="auth-form active" id="loginForm">
-                    <div class="input-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" placeholder="ton@email.com"></div>
-                    <div class="input-group"><label for="loginPassword">Mot de passe</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
-                    <button class="btn btn-add" onclick="firebaseLogin()">🔑 Se connecter</button>
+                <div class="auth-form active" id="loginForm" role="tabpanel">
+                    <div class="input-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" placeholder="ton@email.com" autocomplete="email">
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword">Mot de passe</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+                    </div>
+                    <button class="btn btn-add" id="btnLogin" type="button">🔑 Se connecter</button>
                 </div>
-                <div class="auth-form" id="registerForm">
-                    <div class="input-group"><label for="regEmail">Email</label><input type="email" id="regEmail" placeholder="ton@email.com"></div>
-                    <div class="input-group"><label for="regPassword">Mot de passe (min. 6)</label><input type="password" id="regPassword" placeholder="••••••••"></div>
-                    <div class="input-group"><label for="regPassword2">Confirmer</label><input type="password" id="regPassword2" placeholder="••••••••"></div>
-                    <button class="btn btn-add" onclick="firebaseRegister()">📝 Créer un compte</button>
+                <div class="auth-form" id="registerForm" role="tabpanel">
+                    <div class="input-group">
+                        <label for="regEmail">Email</label>
+                        <input type="email" id="regEmail" placeholder="ton@email.com" autocomplete="email">
+                    </div>
+                    <div class="input-group">
+                        <label for="regPassword">Mot de passe (min. 6)</label>
+                        <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password" minlength="6">
+                    </div>
+                    <div class="input-group">
+                        <label for="regPassword2">Confirmer</label>
+                        <input type="password" id="regPassword2" placeholder="••••••••" autocomplete="new-password" minlength="6">
+                    </div>
+                    <button class="btn btn-add" id="btnRegister" type="button">📝 Créer un compte</button>
                 </div>
             </div>
             <div id="authLogged" style="display:none">
                 <div class="user-info">
-                    <div class="user-avatar">👤</div>
+                    <div class="user-avatar" aria-hidden="true">👤</div>
                     <div>
                         <p class="user-email" id="userEmail">-</p>
                         <p class="user-status" id="syncStatus">☁️ Synchronisé</p>
                     </div>
                 </div>
                 <div class="sync-actions">
-                    <button class="btn btn-export" onclick="firebaseSync()">🔄 Synchroniser</button>
-                    <button class="btn btn-import" onclick="firebasePullData()">⬇️ Récupérer</button>
-                    <button class="btn btn-danger" onclick="firebaseLogout()">🚪 Déconnexion</button>
+                    <button class="btn btn-export" id="btnSync" type="button">🔄 Synchroniser</button>
+                    <button class="btn btn-import" id="btnPullData" type="button">⬇️ Récupérer</button>
+                    <button class="btn btn-danger" id="btnLogout" type="button">🚪 Déconnexion</button>
                 </div>
             </div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" aria-label="Thème">
             <h2>🎨 Thème de couleurs</h2>
-            <div class="theme-grid">
-                <button class="theme-card" onclick="setTheme('purple')" data-theme-btn="purple"><div class="theme-preview purple-prev"></div><span>💜 Violet</span></button>
-                <button class="theme-card" onclick="setTheme('blue')" data-theme-btn="blue"><div class="theme-preview blue-prev"></div><span>💙 Bleu</span></button>
-                <button class="theme-card" onclick="setTheme('green')" data-theme-btn="green"><div class="theme-preview green-prev"></div><span>💚 Vert</span></button>
-                <button class="theme-card" onclick="setTheme('red')" data-theme-btn="red"><div class="theme-preview red-prev"></div><span>❤️ Rouge</span></button>
-                <button class="theme-card" onclick="setTheme('orange')" data-theme-btn="orange"><div class="theme-preview orange-prev"></div><span>🧡 Orange</span></button>
-                <button class="theme-card" onclick="setTheme('pink')" data-theme-btn="pink"><div class="theme-preview pink-prev"></div><span>💗 Rose</span></button>
-                <button class="theme-card" onclick="setTheme('dark')" data-theme-btn="dark"><div class="theme-preview dark-prev"></div><span>🖤 Noir</span></button>
-                <button class="theme-card" onclick="setTheme('cyan')" data-theme-btn="cyan"><div class="theme-preview cyan-prev"></div><span>🩵 Cyan</span></button>
-                <button class="theme-card" onclick="setTheme('gold')" data-theme-btn="gold"><div class="theme-preview gold-prev"></div><span>💛 Or</span></button>
+            <div class="theme-grid" role="radiogroup" aria-label="Choix du thème">
+                <button class="theme-card" data-theme-btn="purple" type="button"><div class="theme-preview purple-prev"></div><span>💜 Violet</span></button>
+                <button class="theme-card" data-theme-btn="blue" type="button"><div class="theme-preview blue-prev"></div><span>💙 Bleu</span></button>
+                <button class="theme-card" data-theme-btn="green" type="button"><div class="theme-preview green-prev"></div><span>💚 Vert</span></button>
+                <button class="theme-card" data-theme-btn="red" type="button"><div class="theme-preview red-prev"></div><span>❤️ Rouge</span></button>
+                <button class="theme-card" data-theme-btn="orange" type="button"><div class="theme-preview orange-prev"></div><span>🧡 Orange</span></button>
+                <button class="theme-card" data-theme-btn="pink" type="button"><div class="theme-preview pink-prev"></div><span>💗 Rose</span></button>
+                <button class="theme-card" data-theme-btn="dark" type="button"><div class="theme-preview dark-prev"></div><span>🖤 Noir</span></button>
+                <button class="theme-card" data-theme-btn="cyan" type="button"><div class="theme-preview cyan-prev"></div><span>🩵 Cyan</span></button>
+                <button class="theme-card" data-theme-btn="gold" type="button"><div class="theme-preview gold-prev"></div><span>💛 Or</span></button>
             </div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" aria-label="Police">
             <h2>🔤 Police d'écriture</h2>
-            <div class="font-grid">
-                <button class="font-card" onclick="setFont('Poppins')" data-font-btn="Poppins" style="font-family:'Poppins',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Poppins</span></button>
-                <button class="font-card" onclick="setFont('Roboto')" data-font-btn="Roboto" style="font-family:'Roboto',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Roboto</span></button>
-                <button class="font-card" onclick="setFont('Lora')" data-font-btn="Lora" style="font-family:'Lora',serif"><span class="font-preview">Aa</span><span class="font-name">Lora</span></button>
-                <button class="font-card" onclick="setFont('Merriweather')" data-font-btn="Merriweather" style="font-family:'Merriweather',serif"><span class="font-preview">Aa</span><span class="font-name">Merriweather</span></button>
-                <button class="font-card" onclick="setFont('Montserrat')" data-font-btn="Montserrat" style="font-family:'Montserrat',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Montserrat</span></button>
-                <button class="font-card" onclick="setFont('Playfair Display')" data-font-btn="Playfair Display" style="font-family:'Playfair Display',serif"><span class="font-preview">Aa</span><span class="font-name">Playfair</span></button>
-                <button class="font-card" onclick="setFont('Open Sans')" data-font-btn="Open Sans" style="font-family:'Open Sans',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Open Sans</span></button>
-                <button class="font-card" onclick="setFont('Nunito')" data-font-btn="Nunito" style="font-family:'Nunito',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Nunito</span></button>
-                <button class="font-card" onclick="setFont('Quicksand')" data-font-btn="Quicksand" style="font-family:'Quicksand',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Quicksand</span></button>
-                <button class="font-card" onclick="setFont('Comfortaa')" data-font-btn="Comfortaa" style="font-family:'Comfortaa',cursive"><span class="font-preview">Aa</span><span class="font-name">Comfortaa</span></button>
-                <button class="font-card" onclick="setFont('Dancing Script')" data-font-btn="Dancing Script" style="font-family:'Dancing Script',cursive"><span class="font-preview">Aa</span><span class="font-name">Dancing</span></button>
+            <div class="font-grid" role="radiogroup" aria-label="Choix de la police">
+                <button class="font-card" data-font-btn="Poppins" type="button" style="font-family:'Poppins',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Poppins</span></button>
+                <button class="font-card" data-font-btn="Roboto" type="button" style="font-family:'Roboto',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Roboto</span></button>
+                <button class="font-card" data-font-btn="Lora" type="button" style="font-family:'Lora',serif"><span class="font-preview">Aa</span><span class="font-name">Lora</span></button>
+                <button class="font-card" data-font-btn="Merriweather" type="button" style="font-family:'Merriweather',serif"><span class="font-preview">Aa</span><span class="font-name">Merriweather</span></button>
+                <button class="font-card" data-font-btn="Montserrat" type="button" style="font-family:'Montserrat',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Montserrat</span></button>
+                <button class="font-card" data-font-btn="Playfair Display" type="button" style="font-family:'Playfair Display',serif"><span class="font-preview">Aa</span><span class="font-name">Playfair</span></button>
+                <button class="font-card" data-font-btn="Open Sans" type="button" style="font-family:'Open Sans',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Open Sans</span></button>
+                <button class="font-card" data-font-btn="Nunito" type="button" style="font-family:'Nunito',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Nunito</span></button>
+                <button class="font-card" data-font-btn="Quicksand" type="button" style="font-family:'Quicksand',sans-serif"><span class="font-preview">Aa</span><span class="font-name">Quicksand</span></button>
+                <button class="font-card" data-font-btn="Comfortaa" type="button" style="font-family:'Comfortaa',cursive"><span class="font-preview">Aa</span><span class="font-name">Comfortaa</span></button>
+                <button class="font-card" data-font-btn="Dancing Script" type="button" style="font-family:'Dancing Script',cursive"><span class="font-preview">Aa</span><span class="font-name">Dancing</span></button>
             </div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" aria-label="Effets visuels">
             <h2>✨ Effets visuels</h2>
             <div class="setting-row">
-                <div><span class="setting-label">Particules</span><span class="setting-hint">Bulles flottantes</span></div>
-                <label class="toggle"><input type="checkbox" id="toggleParticles" checked onchange="toggleParticlesF()"><span class="toggle-slider"></span></label>
+                <div>
+                    <span class="setting-label">Particules</span>
+                    <span class="setting-hint">Bulles flottantes</span>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="toggleParticles" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="setting-row">
-                <div><span class="setting-label">Animations</span><span class="setting-hint">Effets au survol</span></div>
-                <label class="toggle"><input type="checkbox" id="toggleAnimations" checked onchange="toggleAnimationsF()"><span class="toggle-slider"></span></label>
+                <div>
+                    <span class="setting-label">Animations</span>
+                    <span class="setting-hint">Effets au survol</span>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="toggleAnimations" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" aria-label="Gestion des données">
             <h2>💾 Données locales</h2>
             <div class="data-actions">
-                <button class="btn btn-export" onclick="exportData()">📤 Exporter</button>
-                <button class="btn btn-import" onclick="document.getElementById('importFile').click()">📥 Importer</button>
-                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Tout supprimer</button>
+                <button class="btn btn-export" id="btnExport" type="button">📤 Exporter</button>
+                <button class="btn btn-import" id="btnImportTrigger" type="button">📥 Importer</button>
+                <input type="file" id="importFile" accept=".json" style="display:none">
+                <button class="btn btn-danger" id="btnClearAll" type="button">🗑️ Tout supprimer</button>
             </div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" aria-label="À propos">
             <h2>ℹ️ À propos</h2>
             <div class="about-card">
-                <p><strong>📚 Ma Pile à Livres</strong> — Version 11.0</p>
+                <p><strong>📚 Ma Pile à Livres</strong> — Version 11.2</p>
                 <p>Fait avec ❤️ — 2025</p>
                 <p class="about-small">Données sauvegardées localement + cloud (Firebase)</p>
             </div>
         </section>
     </div>
 
-    <!-- MODALES -->
-    <div class="modal-overlay" id="ratingModal">
+    <!-- ============================================================ -->
+    <!--  MODALES                                                      -->
+    <!-- ============================================================ -->
+
+    <!-- Modale notation livre biblio -->
+    <div class="modal-overlay" id="ratingModal" role="dialog" aria-modal="true" aria-labelledby="ratingModalTitle">
         <div class="modal">
-            <button class="modal-close" onclick="closeRatingModal()">✕</button>
-            <h2>⭐ Noter ce livre</h2>
+            <button class="modal-close" id="closeRatingModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="ratingModalTitle">⭐ Noter ce livre</h2>
             <p class="modal-book-title" id="modalBookTitle"></p>
-            <div class="stars-input" id="starsInput">
-                <span class="star-btn" onclick="setRating(1)">★</span>
-                <span class="star-btn" onclick="setRating(2)">★</span>
-                <span class="star-btn" onclick="setRating(3)">★</span>
-                <span class="star-btn" onclick="setRating(4)">★</span>
-                <span class="star-btn" onclick="setRating(5)">★</span>
+            <div class="stars-input" id="starsInput" role="radiogroup" aria-label="Note sur 5">
+                <span class="star-btn" data-rating="1" role="radio" tabindex="0" aria-label="1 étoile">★</span>
+                <span class="star-btn" data-rating="2" role="radio" tabindex="0" aria-label="2 étoiles">★</span>
+                <span class="star-btn" data-rating="3" role="radio" tabindex="0" aria-label="3 étoiles">★</span>
+                <span class="star-btn" data-rating="4" role="radio" tabindex="0" aria-label="4 étoiles">★</span>
+                <span class="star-btn" data-rating="5" role="radio" tabindex="0" aria-label="5 étoiles">★</span>
             </div>
             <div class="form-row date-row">
                 <div class="input-group">
                     <label for="bookDateStart">📅 Début de lecture</label>
-                    <input type="date" id="bookDateStart" onchange="calcReadingDays('book')">
+                    <input type="date" id="bookDateStart">
                 </div>
                 <div class="input-group">
                     <label for="bookDateEnd">🏁 Fin de lecture</label>
-                    <input type="date" id="bookDateEnd" onchange="calcReadingDays('book')">
+                    <input type="date" id="bookDateEnd">
                 </div>
             </div>
-            <p class="reading-days" id="bookReadingDays"></p>
-            <textarea id="bookReview" placeholder="Ton avis (optionnel)..."></textarea>
-            <button class="btn btn-confirm" onclick="confirmRating()">✅ Confirmer</button>
+            <p class="reading-days" id="bookReadingDays" aria-live="polite"></p>
+            <textarea id="bookReview" placeholder="Ton avis (optionnel)..." aria-label="Avis sur le livre"></textarea>
+            <button class="btn btn-confirm" id="confirmRatingBtn" type="button">✅ Confirmer</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="ratingExtModal">
+    <!-- Modale notation livre externe -->
+    <div class="modal-overlay" id="ratingExtModal" role="dialog" aria-modal="true" aria-labelledby="ratingExtModalTitle">
         <div class="modal">
-            <button class="modal-close" onclick="closeRatingExtModal()">✕</button>
-            <h2>⭐ Noter ce livre</h2>
+            <button class="modal-close" id="closeRatingExtModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="ratingExtModalTitle">⭐ Noter ce livre</h2>
             <p class="modal-book-title" id="modalExtBookTitle"></p>
-            <div class="stars-input" id="starsExtInput">
-                <span class="star-btn" onclick="setExtRating(1)">★</span>
-                <span class="star-btn" onclick="setExtRating(2)">★</span>
-                <span class="star-btn" onclick="setExtRating(3)">★</span>
-                <span class="star-btn" onclick="setExtRating(4)">★</span>
-                <span class="star-btn" onclick="setExtRating(5)">★</span>
+            <div class="stars-input" id="starsExtInput" role="radiogroup" aria-label="Note sur 5">
+                <span class="star-btn" data-rating="1" role="radio" tabindex="0" aria-label="1 étoile">★</span>
+                <span class="star-btn" data-rating="2" role="radio" tabindex="0" aria-label="2 étoiles">★</span>
+                <span class="star-btn" data-rating="3" role="radio" tabindex="0" aria-label="3 étoiles">★</span>
+                <span class="star-btn" data-rating="4" role="radio" tabindex="0" aria-label="4 étoiles">★</span>
+                <span class="star-btn" data-rating="5" role="radio" tabindex="0" aria-label="5 étoiles">★</span>
             </div>
             <div class="form-row date-row">
                 <div class="input-group">
                     <label for="extDateStart">📅 Début de lecture</label>
-                    <input type="date" id="extDateStart" onchange="calcReadingDays('ext')">
+                    <input type="date" id="extDateStart">
                 </div>
                 <div class="input-group">
                     <label for="extDateEnd">🏁 Fin de lecture</label>
-                    <input type="date" id="extDateEnd" onchange="calcReadingDays('ext')">
+                    <input type="date" id="extDateEnd">
                 </div>
             </div>
-            <p class="reading-days" id="extReadingDays"></p>
-            <textarea id="extBookReview" placeholder="Ton avis (optionnel)..."></textarea>
-            <button class="btn btn-confirm" onclick="confirmExtRating()">✅ Confirmer</button>
+            <p class="reading-days" id="extReadingDays" aria-live="polite"></p>
+            <textarea id="extBookReview" placeholder="Ton avis (optionnel)..." aria-label="Avis sur le livre"></textarea>
+            <button class="btn btn-confirm" id="confirmExtRatingBtn" type="button">✅ Confirmer</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="transferModal">
+    <!-- Modale transfert wishlist → biblio -->
+    <div class="modal-overlay" id="transferModal" role="dialog" aria-modal="true" aria-labelledby="transferModalTitle">
         <div class="modal">
-            <button class="modal-close" onclick="closeTransferModal()">✕</button>
-            <h2>📚 Transférer</h2>
+            <button class="modal-close" id="closeTransferModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="transferModalTitle">📚 Transférer</h2>
             <p class="modal-book-title" id="transferBookTitle"></p>
             <p class="transfer-desc">Ajouter à la bibliothèque comme "À lire".</p>
-            <div class="transfer-options"><label class="transfer-option"><input type="checkbox" id="removeFromWishlist" checked><span>Retirer de la wishlist</span></label></div>
-            <button class="btn btn-confirm" onclick="confirmTransfer()">📚 Transférer</button>
+            <div class="transfer-options">
+                <label class="transfer-option">
+                    <input type="checkbox" id="removeFromWishlist" checked>
+                    <span>Retirer de la wishlist</span>
+                </label>
+            </div>
+            <button class="btn btn-confirm" id="confirmTransferBtn" type="button">📚 Transférer</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="editSagaModal">
+    <!-- Modale édition saga -->
+    <div class="modal-overlay" id="editSagaModal" role="dialog" aria-modal="true" aria-labelledby="editSagaModalTitle">
         <div class="modal">
-            <button class="modal-close" onclick="closeEditSagaModal()">✕</button>
-            <h2>✏️ Modifier la saga</h2>
+            <button class="modal-close" id="closeEditSagaModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="editSagaModalTitle">✏️ Modifier la saga</h2>
             <p class="modal-book-title" id="editSagaTitle"></p>
             <div class="input-group" style="margin:15px 0;text-align:left">
                 <label for="editSagaTotalTomes" style="color:#aaa">Nombre total de tomes</label>
-                <input type="number" id="editSagaTotalTomes" min="1">
+                <input type="number" id="editSagaTotalTomes" min="1" inputmode="numeric">
             </div>
-            <button class="btn btn-confirm" onclick="confirmEditSaga()">✅ Sauvegarder</button>
+            <button class="btn btn-confirm" id="confirmEditSagaBtn" type="button">✅ Sauvegarder</button>
         </div>
     </div>
 
-    <!-- MODAL ÉDITION LIVRE BIBLIO -->
-    <div class="modal-overlay" id="editBookModal">
+    <!-- Modale édition livre biblio -->
+    <div class="modal-overlay" id="editBookModal" role="dialog" aria-modal="true" aria-labelledby="editBookModalTitle">
         <div class="modal modal-large">
-            <button class="modal-close" onclick="closeEditBookModal()">✕</button>
-            <h2>✏️ Modifier le livre</h2>
+            <button class="modal-close" id="closeEditBookModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="editBookModalTitle">✏️ Modifier le livre</h2>
             <div class="input-group">
                 <label for="editBookTitle">Titre</label>
-                <input type="text" id="editBookTitle" required>
+                <input type="text" id="editBookTitle" required autocomplete="off">
             </div>
             <div class="input-group">
                 <label for="editBookAuthor">Auteur</label>
-                <input type="text" id="editBookAuthor" required>
+                <input type="text" id="editBookAuthor" required autocomplete="off">
             </div>
             <div class="form-row">
                 <div class="input-group">
@@ -683,30 +783,30 @@
             </div>
             <div class="form-row">
                 <div class="input-group">
-                    <label for="editBookSeries">Série (optionnel)</label>
-                    <input type="text" id="editBookSeries">
+                    <label for="editBookSeries">Série <span class="optional-label">(optionnel)</span></label>
+                    <input type="text" id="editBookSeries" autocomplete="off">
                 </div>
                 <div class="input-group">
                     <label for="editBookTome">Tome n°</label>
-                    <input type="number" id="editBookTome" min="1">
+                    <input type="number" id="editBookTome" min="1" inputmode="numeric">
                 </div>
             </div>
-            <button type="button" class="btn btn-confirm" onclick="confirmEditBook()">✅ Sauvegarder</button>
+            <button type="button" class="btn btn-confirm" id="confirmEditBookBtn">✅ Sauvegarder</button>
         </div>
     </div>
 
-    <!-- MODAL ÉDITION WISHLIST -->
-    <div class="modal-overlay" id="editWishModal">
+    <!-- Modale édition wishlist -->
+    <div class="modal-overlay" id="editWishModal" role="dialog" aria-modal="true" aria-labelledby="editWishModalTitle">
         <div class="modal modal-large">
-            <button class="modal-close" onclick="closeEditWishModal()">✕</button>
-            <h2>✏️ Modifier</h2>
+            <button class="modal-close" id="closeEditWishModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="editWishModalTitle">✏️ Modifier</h2>
             <div class="input-group">
                 <label for="editWishTitle">Titre</label>
-                <input type="text" id="editWishTitle" required>
+                <input type="text" id="editWishTitle" required autocomplete="off">
             </div>
             <div class="input-group">
                 <label for="editWishAuthor">Auteur</label>
-                <input type="text" id="editWishAuthor" required>
+                <input type="text" id="editWishAuthor" required autocomplete="off">
             </div>
             <div class="form-row">
                 <div class="input-group">
@@ -753,38 +853,38 @@
             </div>
             <div class="form-row">
                 <div class="input-group">
-                    <label for="editWishSeries">Série (optionnel)</label>
-                    <input type="text" id="editWishSeries">
+                    <label for="editWishSeries">Série <span class="optional-label">(optionnel)</span></label>
+                    <input type="text" id="editWishSeries" autocomplete="off">
                 </div>
                 <div class="input-group">
                     <label for="editWishTome">Tome n°</label>
-                    <input type="number" id="editWishTome" min="1">
+                    <input type="number" id="editWishTome" min="1" inputmode="numeric">
                 </div>
                 <div class="input-group">
                     <label for="editWishPrice">Prix (€)</label>
-                    <input type="number" id="editWishPrice" min="0" step="0.01">
+                    <input type="number" id="editWishPrice" min="0" step="0.01" inputmode="decimal">
                 </div>
             </div>
             <div class="input-group">
                 <label for="editWishNotes">Notes</label>
-                <input type="text" id="editWishNotes">
+                <input type="text" id="editWishNotes" autocomplete="off">
             </div>
-            <button type="button" class="btn btn-confirm" onclick="confirmEditWish()">✅ Sauvegarder</button>
+            <button type="button" class="btn btn-confirm" id="confirmEditWishBtn">✅ Sauvegarder</button>
         </div>
     </div>
 
-    <!-- MODAL ÉDITION EXTERNAL -->
-    <div class="modal-overlay" id="editExtModal">
+    <!-- Modale édition livre externe -->
+    <div class="modal-overlay" id="editExtModal" role="dialog" aria-modal="true" aria-labelledby="editExtModalTitle">
         <div class="modal modal-large">
-            <button class="modal-close" onclick="closeEditExtModal()">✕</button>
-            <h2>✏️ Modifier</h2>
+            <button class="modal-close" id="closeEditExtModal" type="button" aria-label="Fermer">✕</button>
+            <h2 id="editExtModalTitle">✏️ Modifier</h2>
             <div class="input-group">
                 <label for="editExtTitle">Titre</label>
-                <input type="text" id="editExtTitle" required>
+                <input type="text" id="editExtTitle" required autocomplete="off">
             </div>
             <div class="input-group">
                 <label for="editExtAuthor">Auteur</label>
-                <input type="text" id="editExtAuthor" required>
+                <input type="text" id="editExtAuthor" required autocomplete="off">
             </div>
             <div class="form-row">
                 <div class="input-group">
@@ -822,25 +922,34 @@
             </div>
             <div class="form-row">
                 <div class="input-group">
-                    <label for="editExtSeries">Série (optionnel)</label>
-                    <input type="text" id="editExtSeries">
+                    <label for="editExtSeries">Série <span class="optional-label">(optionnel)</span></label>
+                    <input type="text" id="editExtSeries" autocomplete="off">
                 </div>
                 <div class="input-group">
                     <label for="editExtTome">Tome n°</label>
-                    <input type="number" id="editExtTome" min="1">
+                    <input type="number" id="editExtTome" min="1" inputmode="numeric">
+                </div>
+                <div class="input-group">
+                    <label for="editExtTotalTomes">Tomes prévus</label>
+                    <input type="number" id="editExtTotalTomes" min="1" inputmode="numeric">
                 </div>
             </div>
             <div class="input-group">
                 <label for="editExtNotes">Notes</label>
-                <input type="text" id="editExtNotes">
+                <input type="text" id="editExtNotes" autocomplete="off">
             </div>
-            <button type="button" class="btn btn-confirm" onclick="confirmEditExt()">✅ Sauvegarder</button>
+            <button type="button" class="btn btn-confirm" id="confirmEditExtBtn">✅ Sauvegarder</button>
         </div>
     </div>
 
-    <footer><p>📚 Ma Pile à Livres v11.0 — Fait avec ❤️ — 2025</p></footer>
+    <!-- Footer -->
+    <footer>
+        <p>📚 Ma Pile à Livres v11.2 — Fait avec ❤️ — 2025</p>
+    </footer>
 
-    <!-- FIREBASE -->
+    <!-- ============================================================ -->
+    <!--  FIREBASE SDK                                                 -->
+    <!-- ============================================================ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -872,6 +981,7 @@
         document.dispatchEvent(new Event('firebaseReady'));
     </script>
 
+    <!-- Script principal -->
     <script src="script.js"></script>
 </body>
 </html>
