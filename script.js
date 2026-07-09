@@ -1,6 +1,7 @@
 // ============================================================
-//  MA PILE À LIVRES — SCRIPT PRINCIPAL v11.3
-//  Optimisé : événements délégués, sagas empruntées, tomes prévus
+//  MA PILE À LIVRES — SCRIPT PRINCIPAL v11.4
+//  Sync avancée : fusion intelligente, suppressions tracées,
+//  sync périodique, multi-appareils sans perte de données
 // ============================================================
 
 (function () {
@@ -13,6 +14,7 @@
     var wishlist = loadJSON('myBookWishlist', []);
     var external = loadJSON('myBookExternal', []);
     var sagasMeta = loadJSON('myBookSagasMeta', {});
+    var deletedItems = loadJSON('myBookDeleted', { books: [], wishlist: [], external: [] });
     var settings = loadJSON('myBookPileSettings', {
         theme: 'purple', particles: true, animations: true, font: 'Poppins'
     });
@@ -33,7 +35,8 @@
         editWishId: null,
         editExtId: null,
         currentUser: null,
-        syncTimeout: null
+        syncTimeout: null,
+        periodicSyncInterval: null
     };
 
     // ============================================================
@@ -46,6 +49,10 @@
     var PRIORITY_LABELS = { 3: '🔴 Haute', 2: '🟡 Moyenne', 1: '🟢 Basse' };
     var PRIORITY_CLASSES = { 3: 'high', 2: 'medium', 1: 'low' };
     var MS_PER_DAY = 86400000;
+    var SYNC_DEBOUNCE_MS = 2000;
+    var SYNC_RETRY_DELAY = 5000;
+    var SYNC_PERIODIC_MS = 60000;
+    var DELETED_RETENTION_MS = 30 * MS_PER_DAY;
 
     // ============================================================
     //  HELPERS
@@ -116,6 +123,11 @@
 
     function getSeriesKey(name) { return name.trim().toLowerCase(); }
 
+    function stampUpdate(item) {
+        if (item) item.updatedAt = nowTimestamp();
+        return item;
+    }
+
     // ============================================================
     //  SAUVEGARDE
     // ============================================================
@@ -124,6 +136,7 @@
     function saveExternal() { saveJSON('myBookExternal', external); triggerAutoSync(); }
     function saveSagasMeta() { saveJSON('myBookSagasMeta', sagasMeta); triggerAutoSync(); }
     function saveSettings() { saveJSON('myBookPileSettings', settings); }
+    function saveDeleted() { saveJSON('myBookDeleted', deletedItems); }
 
     // ============================================================
     //  INITIALISATION
@@ -157,7 +170,7 @@
             if (tab) switchTab(tab, btn);
         });
 
-        // Filtres (biblio, external, sagas, wishlist)
+        // Filtres
         delegateClick(document.body, '.filter-btn[data-filter]', function (btn) {
             var filter = btn.getAttribute('data-filter');
             var target = btn.getAttribute('data-target');
@@ -265,12 +278,19 @@
         // Firebase
         bindClick('btnLogin', firebaseLogin);
         bindClick('btnRegister', firebaseRegister);
-        bindClick('btnSync', firebaseSync);
-        bindClick('btnPullData', firebasePullData);
+        bindClick('btnSync', function () { firebaseSync(false); });
+        bindClick('btnPullData', function () { firebasePullData(false); });
         bindClick('btnLogout', firebaseLogout);
 
-        // Délégation actions dynamiques
+        // Actions dynamiques
         delegateClick(document.body, '[data-action]', handleDynamicAction);
+
+        // Sync au retour de visibilité
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && state.currentUser) {
+                firebaseSync(true);
+            }
+        });
     }
 
     function bindClick(id, fn) { var el = $(id); if (el) el.addEventListener('click', fn); }
@@ -297,15 +317,15 @@
 
         switch (action) {
             // Bibliothèque
-            case 'markRead':    markAsRead(id); break;
-            case 'markUnread':  markAsUnread(id); break;
-            case 'deleteBook':  deleteBook(id); break;
-            case 'rateBook':    openRatingModal(id); break;
-            case 'editBook':    openEditBookModal(id); break;
+            case 'markRead':     markAsRead(id); break;
+            case 'markUnread':   markAsUnread(id); break;
+            case 'deleteBook':   deleteBook(id); break;
+            case 'rateBook':     openRatingModal(id); break;
+            case 'editBook':     openEditBookModal(id); break;
             // Externe
-            case 'deleteExt':   deleteExternal(id); break;
-            case 'rateExt':     openRatingExtModal(id); break;
-            case 'editExt':     openEditExtModal(id); break;
+            case 'deleteExt':    deleteExternal(id); break;
+            case 'rateExt':      openRatingExtModal(id); break;
+            case 'editExt':      openEditExtModal(id); break;
             case 'toggleExtBuy': toggleExtWantBuy(id); break;
             // Wishlist
             case 'deleteWish':   deleteWishlistItem(id); break;
@@ -321,7 +341,7 @@
     }
 
     // ============================================================
-    //  PARAMÈTRES
+    //  PARAMÈTRES & THÈMES
     // ============================================================
     function applySettings() {
         document.documentElement.setAttribute('data-theme', settings.theme);
@@ -349,7 +369,6 @@
         if (target) target.classList.add('active');
         if (btn) btn.classList.add('active');
 
-        // Rafraîchir la page active
         switch (tab) {
             case 'authors':  renderAuthors(); break;
             case 'sagas':    renderSagas(); break;
@@ -406,7 +425,10 @@
     }
 
     function exportData() {
-        var data = { books: books, wishlist: wishlist, external: external, sagasMeta: sagasMeta, settings: settings };
+        var data = {
+            books: books, wishlist: wishlist, external: external,
+            sagasMeta: sagasMeta, settings: settings, deletedItems: deletedItems
+        };
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -427,6 +449,7 @@
                 if (data.wishlist && Array.isArray(data.wishlist)) { wishlist = data.wishlist; saveJSON('myBookWishlist', wishlist); }
                 if (data.external && Array.isArray(data.external)) { external = data.external; saveJSON('myBookExternal', external); }
                 if (data.sagasMeta && typeof data.sagasMeta === 'object') { sagasMeta = data.sagasMeta; saveJSON('myBookSagasMeta', sagasMeta); }
+                if (data.deletedItems && typeof data.deletedItems === 'object') { deletedItems = data.deletedItems; saveDeleted(); }
                 if (data.settings && typeof data.settings === 'object') {
                     settings = Object.assign({}, settings, data.settings);
                     saveSettings();
@@ -445,15 +468,16 @@
     }
 
     function clearAllData() {
-        if (!confirm('⚠️ Tout supprimer ? Irréversible.')) return;
+        if (!confirm('⚠️ Tout supprimer localement ? Le cloud restera intact tant que tu ne synchronises pas.')) return;
         books = []; wishlist = []; external = []; sagasMeta = {};
+        deletedItems = { books: [], wishlist: [], external: [] };
         saveJSON('myBookPile', []);
         saveJSON('myBookWishlist', []);
         saveJSON('myBookExternal', []);
         saveJSON('myBookSagasMeta', {});
+        saveDeleted();
         renderAll();
-        triggerAutoSync();
-        showToast('🗑️ Tout supprimé.');
+        showToast('🗑️ Tout supprimé localement.');
     }
 
     // ============================================================
@@ -580,7 +604,6 @@
             var s = map[keys[k]];
             s.books.sort(function (a, b) { return (a.tome || 999) - (b.tome || 999); });
 
-            // Trouver le totalTomes max parmi les livres
             var maxTotal = 0;
             for (var eb = 0; eb < s.books.length; eb++) {
                 if (s.books[eb].totalTomes && s.books[eb].totalTomes > maxTotal) {
@@ -588,7 +611,7 @@
                 }
             }
             s.totalTomes = maxTotal || s.books.length;
-            s.readCount = s.books.length; // Les externes sont considérés comme lus
+            s.readCount = s.books.length;
             s.ownedCount = s.books.length;
             s.progress = s.totalTomes > 0 ? Math.round((s.readCount / s.totalTomes) * 100) : 0;
             s.isCompleted = s.readCount >= s.totalTomes && s.totalTomes > 0;
@@ -605,7 +628,6 @@
         var names = collectSeriesNames(allSeries);
         datalist.innerHTML = buildDatalistOptions(names);
 
-        // Auto-fill tomes prévus
         var input = $('bookSeries');
         if (input && input.value.trim()) {
             var meta = sagasMeta[getSeriesKey(input.value)];
@@ -690,7 +712,7 @@
     function openModal(id) { var m = $(id); if (m) m.classList.add('active'); }
     function closeModal(id) { var m = $(id); if (m) m.classList.remove('active'); }
 
-    // ============================================================
+     // ============================================================
     //  BIBLIOTHÈQUE — AJOUT
     // ============================================================
     function addBook(e) {
@@ -708,7 +730,8 @@
             series: series || null, tome: parseInt(getRawVal('bookTome')) || null,
             status: 'toRead', rating: 0, review: '',
             dateAdded: nowDateStr(), dateRead: null,
-            dateStart: null, dateEnd: null
+            dateStart: null, dateEnd: null,
+            updatedAt: nowTimestamp()
         });
 
         if (series) {
@@ -822,6 +845,7 @@
         if (!b) return;
         b.status = 'read';
         b.dateRead = nowDateStr();
+        stampUpdate(b);
         saveBooks();
         renderAll();
         showToast('✅ Lu !');
@@ -837,6 +861,7 @@
         b.dateRead = null;
         b.dateStart = null;
         b.dateEnd = null;
+        stampUpdate(b);
         saveBooks();
         renderAll();
         showToast('📖 Remis à lire !');
@@ -847,6 +872,8 @@
         if (!book || !confirm('Supprimer "' + book.title + '" ?')) return;
 
         books = removeById(books, id);
+        deletedItems.books.push({ id: id, deletedAt: nowTimestamp() });
+        saveDeleted();
 
         if (book.series) {
             var key = getSeriesKey(book.series);
@@ -898,6 +925,7 @@
         b.review = getVal('bookReview');
         b.dateStart = getRawVal('bookDateStart') || null;
         b.dateEnd = getRawVal('bookDateEnd') || null;
+        stampUpdate(b);
 
         saveBooks();
         renderAll();
@@ -988,7 +1016,8 @@
             status: getRawVal('extStatus'),
             notes: getVal('extNotes'),
             wantToBuy: wantToBuy, rating: 0, review: '',
-            dateAdded: nowDateStr(), dateStart: null, dateEnd: null
+            dateAdded: nowDateStr(), dateStart: null, dateEnd: null,
+            updatedAt: nowTimestamp()
         });
 
         if (wantToBuy) {
@@ -1015,7 +1044,8 @@
             notes: notes ? ('Vient de "empruntés" : ' + notes) : 'Vient de "empruntés"',
             series: series || null, tome: tome, totalTomes: null,
             status: 'toBuy', dateAdded: nowDateStr(), dateBought: null,
-            fromExternal: extId
+            fromExternal: extId,
+            updatedAt: nowTimestamp()
         });
         saveWishlist();
     }
@@ -1135,12 +1165,18 @@
         if (!item) return;
 
         item.wantToBuy = !item.wantToBuy;
+        stampUpdate(item);
 
         if (item.wantToBuy) {
             addToWishlistFromExternal(item.id, item.title, item.author, item.genre, item.series, item.tome, item.notes);
             showToast('🛒 Ajouté à la wishlist !');
         } else {
+            var toRemove = wishlist.filter(function (w) { return w.fromExternal === id; });
+            for (var i = 0; i < toRemove.length; i++) {
+                deletedItems.wishlist.push({ id: toRemove[i].id, deletedAt: nowTimestamp() });
+            }
             wishlist = wishlist.filter(function (w) { return w.fromExternal !== id; });
+            saveDeleted();
             saveWishlist();
             showToast('❌ Retiré de la wishlist !');
         }
@@ -1154,7 +1190,15 @@
         if (!item || !confirm('Supprimer "' + item.title + '" ?')) return;
 
         external = removeById(external, id);
+        deletedItems.external.push({ id: id, deletedAt: nowTimestamp() });
+
+        var relatedWish = wishlist.filter(function (w) { return w.fromExternal === id; });
         wishlist = wishlist.filter(function (w) { return w.fromExternal !== id; });
+        for (var i = 0; i < relatedWish.length; i++) {
+            deletedItems.wishlist.push({ id: relatedWish[i].id, deletedAt: nowTimestamp() });
+        }
+        saveDeleted();
+
         saveExternal();
         saveWishlist();
         renderAll();
@@ -1197,6 +1241,7 @@
         b.review = getVal('extBookReview');
         b.dateStart = getRawVal('extDateStart') || null;
         b.dateEnd = getRawVal('extDateEnd') || null;
+        stampUpdate(b);
 
         saveExternal();
         renderAll();
@@ -1205,7 +1250,7 @@
     }
 
     // ============================================================
-    //  SAGAS (persos + externes)
+    //  SAGAS
     // ============================================================
     function renderSagas() {
         var container = $('sagasList');
@@ -1215,21 +1260,18 @@
         var allSeries = getAllSeries();
         var extSeries = getExternalSeries();
 
-        // Sagas persos filtrées par recherche
         var seriesList = filterSagasByQuery(allSeries, query);
         var extSagasList = filterSagasByQuery(extSeries, query);
 
-        // Stats globales (avant filtrage par catégorie)
         updateSagasStats(allSeries, extSagasList);
 
-        // Filtrage par catégorie
         var displayList;
         switch (state.sagaFilter) {
-            case 'external':    displayList = extSagasList; break;
-            case 'completed':   displayList = seriesList.filter(function (s) { return s.isCompleted; }); break;
-            case 'inProgress':  displayList = seriesList.filter(function (s) { return s.isStarted && !s.isCompleted; }); break;
-            case 'notStarted':  displayList = seriesList.filter(function (s) { return !s.isStarted; }); break;
-            default:            displayList = seriesList;
+            case 'external':   displayList = extSagasList; break;
+            case 'completed':  displayList = seriesList.filter(function (s) { return s.isCompleted; }); break;
+            case 'inProgress': displayList = seriesList.filter(function (s) { return s.isStarted && !s.isCompleted; }); break;
+            case 'notStarted': displayList = seriesList.filter(function (s) { return !s.isStarted; }); break;
+            default:           displayList = seriesList;
         }
 
         if (!displayList.length) {
@@ -1237,7 +1279,6 @@
             return;
         }
 
-        // Tri : en cours > pas commencées > terminées
         displayList.sort(function (a, b) {
             if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
             return b.progress - a.progress;
@@ -1287,7 +1328,6 @@
     }
 
     function buildSagaCard(sg) {
-        // Tomes possédés / lus
         var tomesHtml = '';
         for (var ti = 0; ti < sg.books.length; ti++) {
             var bk = sg.books[ti];
@@ -1300,7 +1340,6 @@
                 '</div>';
         }
 
-        // Tomes manquants
         var ownedNums = [];
         for (var oi = 0; oi < sg.books.length; oi++) {
             if (sg.books[oi].tome) ownedNums.push(sg.books[oi].tome);
@@ -1326,13 +1365,11 @@
                 '</span></div><div class="missing-list">' + missingItems + '</div></div>';
         }
 
-        // Badge
         var compIcon = '';
         if (sg.isExternal) compIcon = '<span class="saga-ext-badge">📖 Saga empruntée</span>';
         else if (sg.isCompleted) compIcon = '<span class="saga-complete-badge">🎉 Terminée !</span>';
         else if (missingTomes.length === 0 && sg.ownedCount >= sg.totalTomes) compIcon = '<span class="saga-all-owned-badge">📚 Tous possédés</span>';
 
-        // Note moyenne
         var ratedBooks = sg.books.filter(function (b) { return b.rating > 0; });
         var avg = ratedBooks.length > 0
             ? (ratedBooks.reduce(function (sum, b) { return sum + b.rating; }, 0) / ratedBooks.length).toFixed(1)
@@ -1381,6 +1418,7 @@
         if (!val || val < 1) { showToast('⚠️ Nombre invalide !'); return; }
         if (!sagasMeta[state.editSagaKey]) sagasMeta[state.editSagaKey] = {};
         sagasMeta[state.editSagaKey].totalTomes = val;
+        sagasMeta[state.editSagaKey].updatedAt = nowTimestamp();
         saveSagasMeta();
         renderAll();
         showToast('✏️ Mise à jour !');
@@ -1399,7 +1437,6 @@
         var sortBy = getRawVal('authorSortSelect') || 'count';
         var allSeries = getAllSeries();
 
-        // Regroupement par auteur
         var authorMap = {};
         for (var i = 0; i < books.length; i++) {
             var key = books[i].author.trim();
@@ -1412,7 +1449,6 @@
             authorMap[key2].extBooks.push(external[i2]);
         }
 
-        // Construction des auteurs enrichis
         var authors = [];
         var aKeys = Object.keys(authorMap);
         for (var j = 0; j < aKeys.length; j++) {
@@ -1454,7 +1490,6 @@
             }
         });
 
-        // Stats
         setText('authorsTotal', authors.length);
         if (authors.length > 0) {
             var sorted = authors.slice().sort(function (a, b) { return b.totalBooks - a.totalBooks; });
@@ -1536,7 +1571,7 @@
         btn.textContent = exp ? '📚 Masquer' : '📚 Voir les livres';
     }
 
-    // ============================================================
+     // ============================================================
     //  WISHLIST
     // ============================================================
     function addWishlistItem(e) {
@@ -1554,7 +1589,8 @@
             series: getVal('wishSeries') || null,
             tome: parseInt(getRawVal('wishTome')) || null,
             totalTomes: parseInt(getRawVal('wishTotalTomes')) || null,
-            status: 'toBuy', dateAdded: nowDateStr(), dateBought: null
+            status: 'toBuy', dateAdded: nowDateStr(), dateBought: null,
+            updatedAt: nowTimestamp()
         });
 
         saveWishlist();
@@ -1642,6 +1678,7 @@
         if (!it) return;
         it.status = 'bought';
         it.dateBought = nowDateStr();
+        stampUpdate(it);
         saveWishlist();
         renderWishlist();
         updateStats();
@@ -1653,6 +1690,7 @@
         if (!it) return;
         it.status = 'toBuy';
         it.dateBought = null;
+        stampUpdate(it);
         saveWishlist();
         renderWishlist();
         updateStats();
@@ -1665,10 +1703,13 @@
 
         if (item.fromExternal) {
             var ext = findById(external, item.fromExternal);
-            if (ext) { ext.wantToBuy = false; saveExternal(); }
+            if (ext) { ext.wantToBuy = false; stampUpdate(ext); saveExternal(); }
         }
 
         wishlist = removeById(wishlist, id);
+        deletedItems.wishlist.push({ id: id, deletedAt: nowTimestamp() });
+        saveDeleted();
+
         saveWishlist();
         renderAll();
         showToast('🗑 Supprimé.');
@@ -1707,7 +1748,8 @@
             series: item.series || null, tome: item.tome || null,
             status: 'toRead', rating: 0, review: '',
             dateAdded: nowDateStr(), dateRead: null,
-            dateStart: null, dateEnd: null
+            dateStart: null, dateEnd: null,
+            updatedAt: nowTimestamp()
         });
 
         if (item.series) {
@@ -1720,9 +1762,12 @@
         var cb = $('removeFromWishlist');
         if (cb && cb.checked) {
             wishlist = removeById(wishlist, state.transferBookId);
+            deletedItems.wishlist.push({ id: state.transferBookId, deletedAt: nowTimestamp() });
+            saveDeleted();
         } else {
             item.status = 'bought';
             item.dateBought = nowDateStr();
+            stampUpdate(item);
         }
 
         saveBooks();
@@ -1811,8 +1856,8 @@
         var newSeries = getVal('editBookSeries');
         b.series = newSeries || null;
         b.tome = parseInt(getRawVal('editBookTome')) || null;
+        stampUpdate(b);
 
-        // Nettoyage ancienne saga
         if (oldSeries && oldSeries !== newSeries) {
             var oldKey = getSeriesKey(oldSeries);
             var hasOthers = books.some(function (x) {
@@ -1874,6 +1919,7 @@
         it.totalTomes = parseInt(getRawVal('editWishTotalTomes')) || null;
         it.price = parseFloat(getRawVal('editWishPrice')) || 0;
         it.notes = getVal('editWishNotes');
+        stampUpdate(it);
 
         saveWishlist();
         renderAll();
@@ -1920,6 +1966,7 @@
         it.tome = parseInt(getRawVal('editExtTome')) || null;
         it.totalTomes = parseInt(getRawVal('editExtTotalTomes')) || null;
         it.notes = getVal('editExtNotes');
+        stampUpdate(it);
 
         saveExternal();
         renderAll();
@@ -1942,7 +1989,7 @@
     }
 
     // ============================================================
-    //  FIREBASE
+    //  FIREBASE — INITIALISATION & AUTH
     // ============================================================
     document.addEventListener('firebaseReady', function () {
         var auth = window.firebaseAuth;
@@ -1951,10 +1998,14 @@
             if (user) {
                 state.currentUser = user;
                 showLoggedUI(user);
-                firebasePullData();
+                // Fusion auto à la connexion (sans confirmation)
+                firebasePullData(true);
+                // Démarrer la sync périodique
+                startPeriodicSync();
             } else {
                 state.currentUser = null;
                 showNotLoggedUI();
+                stopPeriodicSync();
             }
         });
     });
@@ -2003,7 +2054,7 @@
         window.firebaseCreateUser(window.firebaseAuth, email, pass)
             .then(function () {
                 showToast('✅ Compte créé !');
-                setTimeout(firebaseSync, 1000);
+                setTimeout(function () { firebaseSync(true); }, 1000);
             })
             .catch(function (error) {
                 var msgs = {
@@ -2042,29 +2093,172 @@
             .then(function () { showToast('👋 Déconnecté !'); });
     }
 
-    function firebaseSync() {
-        if (!state.currentUser) { showToast('⚠️ Non connecté !'); return; }
+    // ============================================================
+    //  FUSION INTELLIGENTE DES DONNÉES
+    // ============================================================
+    function mergeArrays(localArr, cloudArr, deletedList) {
+        var merged = {};
+        var deletedMap = {};
+
+        // Map des suppressions
+        for (var d = 0; d < deletedList.length; d++) {
+            deletedMap[deletedList[d].id] = deletedList[d].deletedAt;
+        }
+
+        // Items locaux (sauf ceux supprimés)
+        for (var i = 0; i < localArr.length; i++) {
+            var item = localArr[i];
+            if (!deletedMap[item.id]) {
+                merged[item.id] = item;
+            }
+        }
+
+        // Fusion avec items cloud
+        for (var j = 0; j < cloudArr.length; j++) {
+            var cItem = cloudArr[j];
+
+            // Si supprimé APRÈS modification cloud → on garde la suppression
+            if (deletedMap[cItem.id] && deletedMap[cItem.id] > (cItem.updatedAt || 0)) {
+                continue;
+            }
+
+            if (!merged[cItem.id]) {
+                merged[cItem.id] = cItem;
+                continue;
+            }
+
+            // Version la plus récente gagne
+            var localItem = merged[cItem.id];
+            var localTime = localItem.updatedAt || 0;
+            var cloudTime = cItem.updatedAt || 0;
+
+            if (cloudTime > localTime) {
+                merged[cItem.id] = cItem;
+            }
+        }
+
+        var result = [];
+        var keys = Object.keys(merged);
+        for (var k = 0; k < keys.length; k++) {
+            result.push(merged[keys[k]]);
+        }
+        return result;
+    }
+
+    function mergeDeleted(localDel, cloudDel) {
+        var map = {};
+        var i;
+        for (i = 0; i < localDel.length; i++) map[localDel[i].id] = localDel[i];
+        for (i = 0; i < cloudDel.length; i++) {
+            if (!map[cloudDel[i].id] || cloudDel[i].deletedAt > map[cloudDel[i].id].deletedAt) {
+                map[cloudDel[i].id] = cloudDel[i];
+            }
+        }
+        var result = [];
+        var keys = Object.keys(map);
+        // Nettoyer les suppressions vieilles de + 30 jours
+        var cutoff = nowTimestamp() - DELETED_RETENTION_MS;
+        for (var k = 0; k < keys.length; k++) {
+            if (map[keys[k]].deletedAt > cutoff) result.push(map[keys[k]]);
+        }
+        return result;
+    }
+
+    function mergeSagasMeta(localMeta, cloudMeta) {
+        var merged = Object.assign({}, cloudMeta || {});
+        var keys = Object.keys(localMeta || {});
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var localItem = localMeta[key];
+            var cloudItem = merged[key];
+
+            if (!cloudItem) {
+                merged[key] = localItem;
+            } else {
+                var localTime = localItem.updatedAt || 0;
+                var cloudTime = cloudItem.updatedAt || 0;
+                if (localTime >= cloudTime) merged[key] = localItem;
+            }
+        }
+        return merged;
+    }
+
+    // ============================================================
+    //  SYNC — PUSH (envoi local → cloud avec fusion)
+    // ============================================================
+    function firebaseSync(silent) {
+        if (!state.currentUser) {
+            if (!silent) showToast('⚠️ Non connecté !');
+            return Promise.reject('not-logged');
+        }
 
         setSyncStatus('syncing', '⏳ Synchronisation...');
-        var data = {
-            books: books, wishlist: wishlist, external: external,
-            sagasMeta: sagasMeta, settings: settings, lastSync: nowTimestamp()
-        };
 
         var docRef = window.firebaseDoc(window.firebaseDb, 'users', state.currentUser.uid);
-        window.firebaseSetDoc(docRef, data)
+
+        return window.firebaseGetDoc(docRef)
+            .then(function (docSnap) {
+                var cloudData = docSnap.exists() ? docSnap.data() : {};
+
+                // Fusionner
+                var mergedBooks = mergeArrays(books, cloudData.books || [], deletedItems.books);
+                var mergedWishlist = mergeArrays(wishlist, cloudData.wishlist || [], deletedItems.wishlist);
+                var mergedExternal = mergeArrays(external, cloudData.external || [], deletedItems.external);
+                var mergedSagas = mergeSagasMeta(sagasMeta, cloudData.sagasMeta);
+
+                var cloudDeleted = cloudData.deletedItems || { books: [], wishlist: [], external: [] };
+                var mergedDeleted = {
+                    books:    mergeDeleted(deletedItems.books,    cloudDeleted.books    || []),
+                    wishlist: mergeDeleted(deletedItems.wishlist, cloudDeleted.wishlist || []),
+                    external: mergeDeleted(deletedItems.external, cloudDeleted.external || [])
+                };
+
+                // Mettre à jour le local
+                books = mergedBooks;
+                wishlist = mergedWishlist;
+                external = mergedExternal;
+                sagasMeta = mergedSagas;
+                deletedItems = mergedDeleted;
+
+                saveJSON('myBookPile', books);
+                saveJSON('myBookWishlist', wishlist);
+                saveJSON('myBookExternal', external);
+                saveJSON('myBookSagasMeta', sagasMeta);
+                saveDeleted();
+
+                // Envoyer au cloud
+                var data = {
+                    books: mergedBooks,
+                    wishlist: mergedWishlist,
+                    external: mergedExternal,
+                    sagasMeta: mergedSagas,
+                    deletedItems: mergedDeleted,
+                    settings: settings,
+                    lastSync: nowTimestamp(),
+                    device: navigator.userAgent.substring(0, 100)
+                };
+
+                return window.firebaseSetDoc(docRef, data);
+            })
             .then(function () {
+                renderAll();
                 setSyncStatus('ok', '☁️ Synchronisé ' + new Date().toLocaleTimeString('fr-FR'));
-                showToast('☁️ Synchronisé !');
+                if (!silent) showToast('☁️ Synchronisé !');
+                localStorage.setItem('lastSyncedAt', nowTimestamp().toString());
             })
             .catch(function (err) {
                 setSyncStatus('error', '❌ Erreur');
-                showToast('❌ Erreur sync');
+                if (!silent) showToast('❌ Erreur sync — retry dans 5s');
                 console.error('Sync error:', err);
+                setTimeout(function () { firebaseSync(true); }, SYNC_RETRY_DELAY);
+                throw err;
             });
     }
 
-    function firebasePullData() {
+    // ============================================================
+    //  PULL — Récupération manuelle ou à la connexion
+    // ============================================================
+    function firebasePullData(isInitial) {
         if (!state.currentUser) return;
 
         setSyncStatus('syncing', '⏳ Récupération...');
@@ -2074,27 +2268,43 @@
             .then(function (docSnap) {
                 if (!docSnap.exists()) {
                     setSyncStatus('ok', '☁️ Premier envoi...');
-                    firebaseSync();
+                    firebaseSync(true);
                     return;
                 }
 
-                var data = docSnap.data();
-                var localLastSync = parseInt(localStorage.getItem('lastLocalChange') || '0');
-                var cloudLastSync = data.lastSync || 0;
+                var cloudData = docSnap.data();
 
-                if (localLastSync > cloudLastSync && (books.length > 0 || wishlist.length > 0 || external.length > 0)) {
-                    if (confirm('⚠️ Données locales plus récentes.\n\nOK = local vers cloud / Annuler = cloud vers local')) {
-                        firebaseSync();
+                if (!isInitial) {
+                    // Pull manuel : demander confirmation
+                    var msg = '⚠️ Récupérer et fusionner avec le cloud ?\n\n' +
+                              '• Cloud : ' + (cloudData.books || []).length + ' livres, ' +
+                              (cloudData.wishlist || []).length + ' wishlist, ' +
+                              (cloudData.external || []).length + ' externes\n' +
+                              '• Local : ' + books.length + ' livres, ' +
+                              wishlist.length + ' wishlist, ' + external.length + ' externes\n\n' +
+                              'La fusion intelligente préservera tout ce qui est le plus récent.';
+
+                    if (!confirm(msg)) {
+                        setSyncStatus('ok', '☁️ Annulé');
                         return;
                     }
                 }
 
-                if (data.books && Array.isArray(data.books)) books = data.books;
-                if (data.wishlist && Array.isArray(data.wishlist)) wishlist = data.wishlist;
-                if (data.external && Array.isArray(data.external)) external = data.external;
-                if (data.sagasMeta && typeof data.sagasMeta === 'object') sagasMeta = data.sagasMeta;
-                if (data.settings && typeof data.settings === 'object') {
-                    settings = Object.assign({}, settings, data.settings);
+                // Fusion (auto à la connexion, ou après confirmation)
+                books = mergeArrays(books, cloudData.books || [], deletedItems.books);
+                wishlist = mergeArrays(wishlist, cloudData.wishlist || [], deletedItems.wishlist);
+                external = mergeArrays(external, cloudData.external || [], deletedItems.external);
+                sagasMeta = mergeSagasMeta(sagasMeta, cloudData.sagasMeta);
+
+                var cd = cloudData.deletedItems || { books: [], wishlist: [], external: [] };
+                deletedItems = {
+                    books:    mergeDeleted(deletedItems.books,    cd.books    || []),
+                    wishlist: mergeDeleted(deletedItems.wishlist, cd.wishlist || []),
+                    external: mergeDeleted(deletedItems.external, cd.external || [])
+                };
+
+                if (cloudData.settings && typeof cloudData.settings === 'object') {
+                    settings = Object.assign({}, settings, cloudData.settings);
                     applySettings();
                 }
 
@@ -2102,14 +2312,25 @@
                 saveJSON('myBookWishlist', wishlist);
                 saveJSON('myBookExternal', external);
                 saveJSON('myBookSagasMeta', sagasMeta);
+                saveDeleted();
                 saveSettings();
+
                 renderAll();
-                setSyncStatus('ok', '☁️ Récupéré');
-                showToast('⬇️ Récupéré !');
+                setSyncStatus('ok', '☁️ ' + (isInitial ? 'Fusionné' : 'Récupéré'));
+
+                if (isInitial) {
+                    showToast('☁️ Données fusionnées !');
+                } else {
+                    showToast('⬇️ Fusionné avec succès !');
+                }
+
+                // Renvoyer la fusion au cloud pour synchroniser les 2 côtés
+                setTimeout(function () { firebaseSync(true); }, 500);
             })
             .catch(function (err) {
                 setSyncStatus('error', '❌ Erreur');
                 console.error('Pull error:', err);
+                if (!isInitial) showToast('❌ Erreur récupération');
             });
     }
 
@@ -2122,11 +2343,50 @@
         else if (status === 'error') el.classList.add('error');
     }
 
+    // ============================================================
+    //  AUTO-SYNC (déclenché après chaque modification locale)
+    // ============================================================
     function triggerAutoSync() {
         localStorage.setItem('lastLocalChange', nowTimestamp().toString());
         if (!state.currentUser) return;
         if (state.syncTimeout) clearTimeout(state.syncTimeout);
-        state.syncTimeout = setTimeout(firebaseSync, 3000);
+        state.syncTimeout = setTimeout(function () {
+            firebaseSync(true);
+        }, SYNC_DEBOUNCE_MS);
+    }
+
+    // ============================================================
+    //  SYNC PÉRIODIQUE (toutes les 60s, vérifie si cloud modifié)
+    // ============================================================
+    function startPeriodicSync() {
+        if (state.periodicSyncInterval) return;
+        state.periodicSyncInterval = setInterval(function () {
+            if (!state.currentUser) return;
+            if (document.hidden) return;
+
+            var docRef = window.firebaseDoc(window.firebaseDb, 'users', state.currentUser.uid);
+            window.firebaseGetDoc(docRef)
+                .then(function (docSnap) {
+                    if (!docSnap.exists()) return;
+                    var cloudData = docSnap.data();
+                    var lastSynced = parseInt(localStorage.getItem('lastSyncedAt') || '0');
+
+                    if ((cloudData.lastSync || 0) > lastSynced) {
+                        // Cloud modifié depuis notre dernier sync → fusionner
+                        firebaseSync(true);
+                    }
+                })
+                .catch(function (err) {
+                    console.warn('Periodic check failed:', err);
+                });
+        }, SYNC_PERIODIC_MS);
+    }
+
+    function stopPeriodicSync() {
+        if (state.periodicSyncInterval) {
+            clearInterval(state.periodicSyncInterval);
+            state.periodicSyncInterval = null;
+        }
     }
 
 })();
