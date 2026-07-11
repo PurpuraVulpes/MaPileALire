@@ -1,7 +1,6 @@
 // ============================================================
-//  MA PILE À LIVRES — SCRIPT PRINCIPAL v11.4
-//  Sync avancée : fusion intelligente, suppressions tracées,
-//  sync périodique, multi-appareils sans perte de données
+//  MA PILE À LIVRES — SCRIPT PRINCIPAL v11.8
+//  Tirage aléatoire intelligent + historique sagas
 // ============================================================
 
 (function () {
@@ -15,6 +14,10 @@
     var external = loadJSON('myBookExternal', []);
     var sagasMeta = loadJSON('myBookSagasMeta', {});
     var deletedItems = loadJSON('myBookDeleted', { books: [], wishlist: [], external: [] });
+    var randomHistory = loadJSON('myBookRandomHistory', {
+        newSagas: [],
+        continueSagas: []
+    });
     var settings = loadJSON('myBookPileSettings', {
         theme: 'purple', particles: true, animations: true, font: 'Poppins'
     });
@@ -25,6 +28,7 @@
         wishlistFilter: 'all',
         sagaFilter: 'all',
         extFilter: 'all',
+        randomMode: 'all',
         ratingBookId: null,
         selectedRating: 0,
         ratingExtBookId: null,
@@ -36,7 +40,14 @@
         editExtId: null,
         currentUser: null,
         syncTimeout: null,
-        periodicSyncInterval: null
+        periodicSyncInterval: null,
+        // Scanner
+        scannerActive: false,
+        scannerTarget: 'book',
+        lastDetectedCode: null,
+        zxingReader: null,
+        scannerStream: null,
+        detectionInterval: null
     };
 
     // ============================================================
@@ -137,6 +148,7 @@
     function saveSagasMeta() { saveJSON('myBookSagasMeta', sagasMeta); triggerAutoSync(); }
     function saveSettings() { saveJSON('myBookPileSettings', settings); }
     function saveDeleted() { saveJSON('myBookDeleted', deletedItems); }
+    function saveRandomHistory() { saveJSON('myBookRandomHistory', randomHistory); triggerAutoSync(); }
 
     // ============================================================
     //  INITIALISATION
@@ -155,7 +167,7 @@
         renderAuthors();
         renderWishlist();
         updateStats();
-        updateRandomGenreFilter();
+        updateRandomHistory();
         updateSeriesSuggestions();
         updateWishSeriesSuggestions();
     }
@@ -180,6 +192,18 @@
                 case 'sagas':    filterSagas(filter, btn); break;
                 case 'wishlist': filterWishlist(filter, btn); break;
             }
+        });
+
+        // Modes de tirage aléatoire
+        delegateClick(document.body, '.random-mode-btn[data-random-mode]', function (btn) {
+            setRandomMode(btn.getAttribute('data-random-mode'), btn);
+        });
+
+        // Suppression d'un item historique
+        delegateClick(document.body, '.rh-remove', function (btn) {
+            var listType = btn.getAttribute('data-list');
+            var id = parseInt(btn.getAttribute('data-id'));
+            removeRandomHistoryItem(listType, id);
         });
 
         // Thèmes & polices
@@ -229,11 +253,36 @@
         bindClick('closeEditWishModal', function () { closeModal('editWishModal'); state.editWishId = null; });
         bindClick('closeEditExtModal', function () { closeModal('editExtModal'); state.editExtId = null; });
 
+        // 📷 SCANNER EN DIRECT
+        bindClick('btnScanBarcode', function () { openScanner('book'); });
+        bindClick('btnScanBarcodeExt', function () { openScanner('ext'); });
+        bindClick('btnScanBarcodeWish', function () { openScanner('wish'); });
+        bindClick('closeScanModal', closeScanner);
+        bindClick('btnCancelScan', closeScanner);
+        bindClick('btnManualISBN', askManualISBN);
+
+        // 📸 SCANNER PAR PHOTO
+        bindClick('btnPhotoScan', function () { openPhotoScan('book'); });
+        bindClick('btnPhotoScanExt', function () { openPhotoScan('ext'); });
+        bindClick('btnPhotoScanWish', function () { openPhotoScan('wish'); });
+
+        var photoInput = $('photoScanInput');
+        if (photoInput) {
+            photoInput.addEventListener('change', function (e) {
+                var file = e.target.files[0];
+                if (file) scanFromImage(file);
+                e.target.value = '';
+            });
+        }
+
         // Fermeture par clic overlay
         var overlays = document.querySelectorAll('.modal-overlay');
         for (var i = 0; i < overlays.length; i++) {
             overlays[i].addEventListener('click', function (e) {
-                if (e.target === this) this.classList.remove('active');
+                if (e.target === this) {
+                    this.classList.remove('active');
+                    if (this.id === 'scanModal') stopScanner();
+                }
             });
         }
 
@@ -241,7 +290,10 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 var modals = document.querySelectorAll('.modal-overlay.active');
-                for (var i = 0; i < modals.length; i++) modals[i].classList.remove('active');
+                for (var i = 0; i < modals.length; i++) {
+                    modals[i].classList.remove('active');
+                    if (modals[i].id === 'scanModal') stopScanner();
+                }
             }
         });
 
@@ -316,31 +368,549 @@
         var value = btn.getAttribute('data-value');
 
         switch (action) {
-            // Bibliothèque
             case 'markRead':     markAsRead(id); break;
             case 'markUnread':   markAsUnread(id); break;
             case 'deleteBook':   deleteBook(id); break;
             case 'rateBook':     openRatingModal(id); break;
             case 'editBook':     openEditBookModal(id); break;
-            // Externe
             case 'deleteExt':    deleteExternal(id); break;
             case 'rateExt':      openRatingExtModal(id); break;
             case 'editExt':      openEditExtModal(id); break;
             case 'toggleExtBuy': toggleExtWantBuy(id); break;
-            // Wishlist
             case 'deleteWish':   deleteWishlistItem(id); break;
             case 'markBought':   markAsBought(id); break;
             case 'markUnbought': markAsUnbought(id); break;
             case 'transferWish': openTransferModal(id); break;
             case 'editWish':     openEditWishModal(id); break;
-            // Sagas
             case 'editSaga':     openEditSagaModal(value); break;
-            // Auteurs
             case 'toggleAuthor': toggleAuthorBooks(value, btn); break;
         }
     }
 
     // ============================================================
+    //  📸 SCAN PAR PHOTO (iPhone recommandé)
+    // ============================================================
+    function openPhotoScan(target) {
+        state.scannerTarget = target || 'book';
+        state.lastDetectedCode = null;
+
+        var input = $('photoScanInput');
+        if (input) {
+            input.click();
+        }
+    }
+
+    function scanFromImage(file) {
+        showToast('🔍 Analyse de la photo...');
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var img = new Image();
+            img.onload = function () {
+                if (typeof ZXing === 'undefined') {
+                    showToast('❌ ZXing non chargé');
+                    return;
+                }
+
+                try {
+                    var hints = new Map();
+                    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                        ZXing.BarcodeFormat.EAN_13,
+                        ZXing.BarcodeFormat.EAN_8,
+                        ZXing.BarcodeFormat.UPC_A,
+                        ZXing.BarcodeFormat.UPC_E
+                    ]);
+                    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+                    var codeReader = new ZXing.BrowserMultiFormatReader(hints);
+                    codeReader.decodeFromImageElement(img)
+                        .then(function (result) {
+                            var code = result.getText();
+                            console.log('📸 Photo décodée:', code);
+
+                            if (!/^\d{10}$|^\d{13}$/.test(code)) {
+                                showToast('⚠️ Code trouvé mais pas un ISBN');
+                                return;
+                            }
+
+                            showToast('✅ Code détecté : ' + code);
+                            if (navigator.vibrate) {
+                                try { navigator.vibrate(200); } catch (e) {}
+                            }
+                            fetchBookByISBN(code);
+                        })
+                        .catch(function (err) {
+                            console.error('Decode error:', err);
+                            showToast('⚠️ Code non trouvé — réessaie avec une photo plus nette et bien cadrée');
+                        });
+                } catch (e) {
+                    console.error('Scan error:', e);
+                    showToast('❌ Erreur d\'analyse : ' + e.message);
+                }
+            };
+            img.onerror = function () {
+                showToast('❌ Impossible de charger l\'image');
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function () {
+            showToast('❌ Impossible de lire le fichier');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ============================================================
+    //  📷 SCANNER EN DIRECT
+    // ============================================================
+    function openScanner(target) {
+        if (typeof ZXing === 'undefined') {
+            showToast('❌ Bibliothèque ZXing non chargée. Vérifie ta connexion.');
+            return;
+        }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast('❌ Ton navigateur ne supporte pas la caméra');
+            return;
+        }
+
+        state.scannerTarget = target || 'book';
+        state.lastDetectedCode = null;
+
+        openModal('scanModal');
+        setTimeout(startScanner, 400);
+    }
+
+    function closeScanner() {
+        stopScanner();
+        closeModal('scanModal');
+    }
+
+    function startScanner() {
+        var container = $('scannerContainer');
+        if (!container) return;
+
+        var hint = $('scannerHint');
+        if (hint) {
+            hint.textContent = '📷 Ouverture de la caméra...';
+            hint.className = 'scanner-hint';
+        }
+
+        container.innerHTML =
+            '<video id="scanVideo" playsinline muted autoplay style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video>' +
+            '<div id="scanTapHint" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;pointer-events:none;z-index:5;">👆 Touche pour faire la mise au point</div>';
+
+        var video = document.getElementById('scanVideo');
+
+        var constraints = {
+            audio: false,
+            video: {
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1920, min: 1280 },
+                height: { ideal: 1080, min: 720 }
+            }
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function (stream) {
+                video.srcObject = stream;
+                state.scannerStream = stream;
+                state.scannerActive = true;
+
+                video.addEventListener('click', function (e) {
+                    tapToFocus(video, stream, e);
+                });
+
+                video.onloadedmetadata = function () {
+                    video.play();
+
+                    if (hint) {
+                        hint.textContent = '🔍 Vise le code-barres — touche l\'écran pour faire le focus';
+                        hint.className = 'scanner-hint';
+                    }
+
+                    startBarcodeDetection(video);
+                };
+            })
+            .catch(function (err) {
+                console.error('❌ Camera error:', err);
+                if (hint) {
+                    hint.textContent = '❌ Erreur caméra : ' + err.message;
+                    hint.className = 'scanner-hint error';
+                }
+                showToast('❌ Erreur caméra');
+            });
+    }
+
+    function tapToFocus(video, stream, event) {
+        var track = stream.getVideoTracks()[0];
+        if (!track || !track.getCapabilities) return;
+
+        try {
+            var capabilities = track.getCapabilities();
+            if (capabilities.focusMode && capabilities.focusMode.indexOf('single-shot') !== -1) {
+                track.applyConstraints({
+                    advanced: [{ focusMode: 'single-shot' }]
+                }).then(function () {
+                    console.log('✅ Focus déclenché');
+                    var rect = video.getBoundingClientRect();
+                    var x = event.clientX - rect.left;
+                    var y = event.clientY - rect.top;
+
+                    var focus = document.createElement('div');
+                    focus.style.cssText = 'position:absolute;width:60px;height:60px;border:3px solid #43e97b;border-radius:50%;left:' + (x - 30) + 'px;top:' + (y - 30) + 'px;pointer-events:none;animation:focusPulse 0.6s ease-out;z-index:10;';
+                    video.parentNode.appendChild(focus);
+                    setTimeout(function () { focus.remove(); }, 600);
+                }).catch(function (e) {
+                    console.warn('Focus error:', e);
+                });
+            }
+        } catch (e) {
+            console.warn('Focus not supported:', e);
+        }
+    }
+
+    function startBarcodeDetection(video) {
+        if ('BarcodeDetector' in window) {
+            console.log('✅ Utilisation BarcodeDetector natif');
+            startNativeDetection(video);
+            return;
+        }
+
+        console.log('⚠️ BarcodeDetector non dispo, utilisation ZXing');
+        if (typeof ZXing === 'undefined') {
+            showToast('❌ ZXing non chargé');
+            return;
+        }
+
+        try {
+            var hints = new Map();
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                ZXing.BarcodeFormat.EAN_13,
+                ZXing.BarcodeFormat.EAN_8,
+                ZXing.BarcodeFormat.UPC_A,
+                ZXing.BarcodeFormat.UPC_E
+            ]);
+            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+            state.zxingReader = new ZXing.BrowserMultiFormatReader(hints, 200);
+
+            state.zxingReader.decodeFromVideoElement(video, function (result, err) {
+                if (result) {
+                    var code = result.getText();
+                    console.log('📸 Détecté:', code);
+                    handleScanResult(code);
+                }
+            });
+        } catch (e) {
+            console.error('ZXing error:', e);
+            showToast('❌ Erreur scanner : ' + e.message);
+        }
+    }
+
+    function startNativeDetection(video) {
+        try {
+            var detector = new BarcodeDetector({
+                formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e']
+            });
+
+            state.detectionInterval = setInterval(function () {
+                if (!state.scannerActive || video.readyState !== 4) return;
+
+                detector.detect(video)
+                    .then(function (barcodes) {
+                        if (barcodes.length > 0) {
+                            handleScanResult(barcodes[0].rawValue);
+                        }
+                    })
+                    .catch(function (err) {
+                        console.warn('Detect error:', err);
+                    });
+            }, 300);
+        } catch (e) {
+            console.error('BarcodeDetector error:', e);
+            startBarcodeDetection(video);
+        }
+    }
+
+    function handleScanResult(code) {
+        if (!/^\d{10}$|^\d{13}$/.test(code)) {
+            console.log('⚠️ Pas un ISBN:', code);
+            return;
+        }
+
+        if (code === state.lastDetectedCode) return;
+        state.lastDetectedCode = code;
+
+        var hint = $('scannerHint');
+        if (hint) {
+            hint.textContent = '✅ Code détecté : ' + code + ' — Recherche...';
+            hint.className = 'scanner-hint success';
+        }
+
+        if (navigator.vibrate) {
+            try { navigator.vibrate(200); } catch (e) {}
+        }
+
+        fetchBookByISBN(code);
+    }
+
+    function stopScanner() {
+        if (state.zxingReader) {
+            try { state.zxingReader.reset(); } catch (e) {}
+            state.zxingReader = null;
+        }
+
+        if (state.detectionInterval) {
+            clearInterval(state.detectionInterval);
+            state.detectionInterval = null;
+        }
+
+        if (state.scannerStream) {
+            state.scannerStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+            state.scannerStream = null;
+        }
+
+        state.scannerActive = false;
+
+        var container = $('scannerContainer');
+        if (container) container.innerHTML = '';
+    }
+
+    function askManualISBN() {
+        var isbn = prompt('📖 Entre l\'ISBN du livre (10 ou 13 chiffres) :');
+        if (!isbn || !isbn.trim()) return;
+
+        var cleaned = isbn.replace(/[-\s]/g, '');
+        if (!/^\d{10}$|^\d{13}$/.test(cleaned)) {
+            showToast('⚠️ ISBN invalide (10 ou 13 chiffres attendus)');
+            return;
+        }
+
+        var hint = $('scannerHint');
+        if (hint) {
+            hint.textContent = '🔍 Recherche...';
+            hint.className = 'scanner-hint';
+        }
+        fetchBookByISBN(cleaned);
+    }
+
+    // ============================================================
+    //  RÉCUPÉRATION INFOS LIVRE VIA API
+    // ============================================================
+    function fetchBookByISBN(isbn) {
+        fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.totalItems > 0 && data.items && data.items[0].volumeInfo) {
+                    var info = data.items[0].volumeInfo;
+                    fillScannedBook({
+                        title: info.title || '',
+                        subtitle: info.subtitle || '',
+                        author: (info.authors && info.authors.join(', ')) || '',
+                        genre: guessGenre(info.categories),
+                        isbn: isbn
+                    });
+                    showToast('✅ Livre trouvé !');
+                    closeScanner();
+                } else {
+                    fetchFromOpenLibrary(isbn);
+                }
+            })
+            .catch(function (err) {
+                console.error('Google Books error:', err);
+                fetchFromOpenLibrary(isbn);
+            });
+    }
+
+    function fetchFromOpenLibrary(isbn) {
+        fetch('https://openlibrary.org/api/books?bibkeys=ISBN:' + isbn + '&format=json&jscmd=data')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                var key = 'ISBN:' + isbn;
+                if (data[key]) {
+                    var book = data[key];
+                    var authors = book.authors
+                        ? book.authors.map(function (a) { return a.name; }).join(', ')
+                        : '';
+                    fillScannedBook({
+                        title: book.title || '',
+                        subtitle: book.subtitle || '',
+                        author: authors,
+                        genre: 'Roman',
+                        isbn: isbn
+                    });
+                    showToast('✅ Livre trouvé (Open Library) !');
+                    closeScanner();
+                } else {
+                    var hint = $('scannerHint');
+                    if (hint) {
+                        hint.textContent = '❌ Livre introuvable — Saisie manuelle';
+                        hint.className = 'scanner-hint error';
+                    }
+                    showToast('⚠️ Livre non trouvé — Saisis manuellement');
+                    setTimeout(function () {
+                        closeScanner();
+                        var titleInput = getTargetInput('Title');
+                        if (titleInput) titleInput.focus();
+                    }, 1500);
+                }
+            })
+            .catch(function (err) {
+                console.error('Open Library error:', err);
+                showToast('❌ Erreur de connexion');
+            });
+    }
+
+    function guessGenre(categories) {
+        if (!categories || !categories.length) return 'Roman';
+        var cat = categories[0].toLowerCase();
+
+        if (cat.indexOf('fantasy') !== -1) return 'Fantasy';
+        if (cat.indexOf('science') !== -1 && cat.indexOf('fiction') !== -1) return 'SF';
+        if (cat.indexOf('thriller') !== -1) return 'Thriller';
+        if (cat.indexOf('mystery') !== -1 || cat.indexOf('detective') !== -1) return 'Policier';
+        if (cat.indexOf('romance') !== -1) return 'Romance';
+        if (cat.indexOf('young adult') !== -1) return 'Young Adult';
+        if (cat.indexOf('juvenile') !== -1) return 'Jeunesse';
+        if (cat.indexOf('biography') !== -1) return 'Biographie';
+        if (cat.indexOf('philosophy') !== -1) return 'Philosophie';
+        if (cat.indexOf('history') !== -1) return 'Histoire';
+        if (cat.indexOf('poetry') !== -1) return 'Poésie';
+        if (cat.indexOf('comic') !== -1 || cat.indexOf('graphic novel') !== -1) return 'BD';
+        if (cat.indexOf('horror') !== -1) return 'Fantastique';
+        if (cat.indexOf('self-help') !== -1) return 'Dev perso';
+
+        return 'Roman';
+    }
+
+    function getTargetInput(field) {
+        var prefix = state.scannerTarget === 'ext' ? 'ext'
+                   : state.scannerTarget === 'wish' ? 'wish'
+                   : 'book';
+        return $(prefix + field);
+    }
+
+    function fillScannedBook(data) {
+        var prefix = state.scannerTarget === 'ext' ? 'ext'
+                   : state.scannerTarget === 'wish' ? 'wish'
+                   : 'book';
+
+        var fullTitle = data.title;
+        if (data.subtitle) fullTitle += ' - ' + data.subtitle;
+        var parsed = parseBookTitle(fullTitle);
+
+        setFormVal(prefix + 'Title', parsed.title);
+        setFormVal(prefix + 'Author', data.author);
+        if (data.genre) setFormVal(prefix + 'Genre', data.genre);
+
+        if (parsed.tome) {
+            setFormVal(prefix + 'Tome', parsed.tome);
+        }
+
+        if (parsed.series) {
+            setFormVal(prefix + 'Series', parsed.series);
+        }
+
+        var formId = prefix === 'book' ? 'addBookForm'
+                   : prefix === 'ext'  ? 'addExtForm'
+                   : 'addWishlistForm';
+        var form = $(formId);
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ============================================================
+    //  PARSER LE TITRE (extraire tome + série)
+    // ============================================================
+    function parseBookTitle(fullTitle) {
+        if (!fullTitle) return { title: '', tome: null, series: null };
+
+        var original = fullTitle.trim();
+        var title = original;
+        var tome = null;
+        var series = null;
+
+        console.log('🔍 Parsing:', original);
+
+        // Patterns tome
+        var tomePatterns = [
+            /[\s,\-–—:]+tome\s*(\d+)/i,
+            /[\s,\-–—:]+t\.\s*(\d+)/i,
+            /[\s,\-–—:]+t\s*(\d+)(?!\d)/i,
+            /[\s,\-–—:]+volume\s*(\d+)/i,
+            /[\s,\-–—:]+vol\.\s*(\d+)/i,
+            /[\s,\-–—:]+livre\s*(\d+)/i,
+            /[\s,\-–—:]+book\s*(\d+)/i,
+            /[\s,\-–—:]+#(\d+)/,
+            /[\s,\-–—:]+n[°o]\s*(\d+)/i,
+            /\((?:tome|t\.?|vol\.?|volume|livre|book)\s*(\d+)\)/i,
+            /\(#(\d+)\)/,
+            /[\s,\-–—:]+tome\s+(I{1,3}|IV|V|VI{1,3}|IX|X)(?![a-z])/i,
+            /[\s,\-–—:]+(\d+)\s*\/\s*\d+/,
+            /[\s,\-–—:]+(\d+)\s+sur\s+\d+/i
+        ];
+
+        for (var i = 0; i < tomePatterns.length; i++) {
+            var match = title.match(tomePatterns[i]);
+            if (match) {
+                var tomeStr = match[1];
+                tome = romanToInt(tomeStr) || parseInt(tomeStr);
+                console.log('  ✓ Tome trouvé:', tome);
+                title = title.replace(tomePatterns[i], '').trim();
+                title = title.replace(/[,\-–—:\s]+$/, '').trim();
+                title = title.replace(/^\s*[\-–—:]\s*/, '').trim();
+                break;
+            }
+        }
+
+        // Détecter la série
+        var seriesPatterns = [
+            { sep: ' - ', regex: / - / },
+            { sep: ' – ', regex: / – / },
+            { sep: ' — ', regex: / — / },
+            { sep: ' : ', regex: / : / },
+            { sep: ': ', regex: /: / },
+            { sep: ', ', regex: /, / }
+        ];
+
+        for (var s = 0; s < seriesPatterns.length; s++) {
+            var pat = seriesPatterns[s];
+            var idx = title.search(pat.regex);
+            if (idx > 0) {
+                var before = title.substring(0, idx).trim();
+                var after = title.substring(idx + pat.sep.length).trim();
+
+                if (before.length >= 3 && before.length < 50 && after.length > 2) {
+                    series = before;
+                    title = after;
+                    console.log('  ✓ Série trouvée:', series, '/ Titre:', title);
+                    break;
+                }
+            }
+        }
+
+        title = title.replace(/^\s*[\-–—:,]\s*/, '').trim();
+        title = title.replace(/[\-–—:,\s]+$/, '').trim();
+
+        console.log('  → Résultat: titre="' + title + '", tome=' + tome + ', série="' + series + '"');
+
+        return {
+            title: title || original,
+            tome: tome,
+            series: series
+        };
+    }
+
+    function romanToInt(str) {
+        var roman = {
+            'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
+            'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10,
+            'XI': 11, 'XII': 12, 'XIII': 13, 'XIV': 14, 'XV': 15
+        };
+        return roman[str.toUpperCase()] || null;
+    }
+        // ============================================================
     //  PARAMÈTRES & THÈMES
     // ============================================================
     function applySettings() {
@@ -427,7 +997,8 @@
     function exportData() {
         var data = {
             books: books, wishlist: wishlist, external: external,
-            sagasMeta: sagasMeta, settings: settings, deletedItems: deletedItems
+            sagasMeta: sagasMeta, settings: settings, deletedItems: deletedItems,
+            randomHistory: randomHistory
         };
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
@@ -450,6 +1021,7 @@
                 if (data.external && Array.isArray(data.external)) { external = data.external; saveJSON('myBookExternal', external); }
                 if (data.sagasMeta && typeof data.sagasMeta === 'object') { sagasMeta = data.sagasMeta; saveJSON('myBookSagasMeta', sagasMeta); }
                 if (data.deletedItems && typeof data.deletedItems === 'object') { deletedItems = data.deletedItems; saveDeleted(); }
+                if (data.randomHistory && typeof data.randomHistory === 'object') { randomHistory = data.randomHistory; saveJSON('myBookRandomHistory', randomHistory); }
                 if (data.settings && typeof data.settings === 'object') {
                     settings = Object.assign({}, settings, data.settings);
                     saveSettings();
@@ -471,10 +1043,12 @@
         if (!confirm('⚠️ Tout supprimer localement ? Le cloud restera intact tant que tu ne synchronises pas.')) return;
         books = []; wishlist = []; external = []; sagasMeta = {};
         deletedItems = { books: [], wishlist: [], external: [] };
+        randomHistory = { newSagas: [], continueSagas: [] };
         saveJSON('myBookPile', []);
         saveJSON('myBookWishlist', []);
         saveJSON('myBookExternal', []);
         saveJSON('myBookSagasMeta', {});
+        saveJSON('myBookRandomHistory', randomHistory);
         saveDeleted();
         renderAll();
         showToast('🗑️ Tout supprimé localement.');
@@ -712,7 +1286,7 @@
     function openModal(id) { var m = $(id); if (m) m.classList.add('active'); }
     function closeModal(id) { var m = $(id); if (m) m.classList.remove('active'); }
 
-     // ============================================================
+    // ============================================================
     //  BIBLIOTHÈQUE — AJOUT
     // ============================================================
     function addBook(e) {
@@ -934,20 +1508,69 @@
     }
 
     // ============================================================
-    //  RANDOM BOOK
+    //  🎲 TIRAGE ALÉATOIRE INTELLIGENT
     // ============================================================
+    function setRandomMode(mode, btn) {
+        state.randomMode = mode;
+        var btns = document.querySelectorAll('.random-mode-btn');
+        for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+        if (btn) btn.classList.add('active');
+    }
+
     function pickRandomBook() {
-        var gf = getRawVal('randomGenreFilter');
-        var cands = books.filter(function (b) {
-            return b.status === 'toRead' && (gf === 'all' || b.genre === gf);
-        });
+        var mode = state.randomMode;
+        var cands = [];
+
+        if (mode === 'all') {
+            // Tous les livres à lire
+            cands = books.filter(function (b) { return b.status === 'toRead'; });
+        } else if (mode === 'newSaga') {
+            // Livres d'une saga jamais commencée
+            var allSeries = getAllSeries();
+            var seriesKeys = Object.keys(allSeries);
+            var notStartedSeries = seriesKeys.filter(function (k) {
+                return !allSeries[k].isStarted;
+            });
+
+            for (var i = 0; i < books.length; i++) {
+                if (books[i].status !== 'toRead') continue;
+                if (!books[i].series) continue;
+                var key = getSeriesKey(books[i].series);
+                if (notStartedSeries.indexOf(key) !== -1) {
+                    cands.push(books[i]);
+                }
+            }
+        } else if (mode === 'continueSaga') {
+            // Livres d'une saga déjà commencée mais pas terminée
+            var allSeries2 = getAllSeries();
+            var inProgressSeries = Object.keys(allSeries2).filter(function (k) {
+                return allSeries2[k].isStarted && !allSeries2[k].isCompleted;
+            });
+
+            for (var j = 0; j < books.length; j++) {
+                if (books[j].status !== 'toRead') continue;
+                if (!books[j].series) continue;
+                var key2 = getSeriesKey(books[j].series);
+                if (inProgressSeries.indexOf(key2) !== -1) {
+                    cands.push(books[j]);
+                }
+            }
+        }
 
         var rd = $('randomResult');
         var btn = $('randomBtn');
         if (!rd || !btn) return;
 
         if (!cands.length) {
-            rd.innerHTML = '<div class="random-card"><h3>😅 Aucun livre à lire !</h3></div>';
+            var msg;
+            if (mode === 'newSaga') {
+                msg = '😅 Aucune nouvelle saga à commencer ! Ajoute des sagas avec des tomes non lus.';
+            } else if (mode === 'continueSaga') {
+                msg = '😅 Aucune saga en cours à continuer !';
+            } else {
+                msg = '😅 Aucun livre à lire !';
+            }
+            rd.innerHTML = '<div class="random-card"><h3>' + msg + '</h3></div>';
             return;
         }
 
@@ -973,24 +1596,89 @@
                 btn.disabled = false;
                 btn.textContent = '🎰 Choisir au hasard';
                 showToast('🎲 "' + ch.title + '" choisi !');
+
+                // Enregistrer dans l'historique si c'est une saga
+                if (ch.series && (mode === 'newSaga' || mode === 'continueSaga')) {
+                    addToRandomHistory(mode, ch);
+                }
             }
         }, 100);
     }
 
-    function updateRandomGenreFilter() {
-        var s = $('randomGenreFilter');
-        if (!s) return;
-        var genres = [];
-        for (var i = 0; i < books.length; i++) {
-            if (books[i].status === 'toRead' && genres.indexOf(books[i].genre) === -1) {
-                genres.push(books[i].genre);
-            }
+    function addToRandomHistory(mode, book) {
+        var listName = mode === 'newSaga' ? 'newSagas' : 'continueSagas';
+        var list = randomHistory[listName];
+
+        // Éviter doublons (même livre)
+        var exists = list.some(function (item) {
+            return item.bookId === book.id;
+        });
+        if (exists) return;
+
+        list.push({
+            id: nowTimestamp(),
+            bookId: book.id,
+            sagaName: book.series,
+            bookTitle: book.title,
+            tome: book.tome,
+            dateAdded: nowDateStr()
+        });
+
+        saveRandomHistory();
+        updateRandomHistory();
+        showToast('📌 Ajouté à l\'historique !');
+    }
+
+    function updateRandomHistory() {
+        renderRandomHistoryList('newSagas', 'randomNewSagasList');
+        renderRandomHistoryList('continueSagas', 'randomContinueSagasList');
+    }
+
+    function renderRandomHistoryList(listName, containerId) {
+        var container = $(containerId);
+        if (!container) return;
+
+        var list = randomHistory[listName] || [];
+
+        // Nettoyer les items qui ne pointent plus vers des livres existants
+        list = list.filter(function (item) {
+            return findById(books, item.bookId) !== null;
+        });
+        randomHistory[listName] = list;
+
+        if (!list.length) {
+            container.innerHTML = '<p class="random-history-empty">Aucune saga pour le moment. Utilise le tirage aléatoire !</p>';
+            return;
         }
-        var html = '<option value="all">Tous</option>';
-        for (var j = 0; j < genres.length; j++) {
-            html += '<option value="' + escapeHTML(genres[j]) + '">' + escapeHTML(genres[j]) + '</option>';
+
+        // Trier par date d'ajout descendante (plus récent en premier)
+        list.sort(function (a, b) { return b.id - a.id; });
+
+        var parts = [];
+        for (var i = 0; i < list.length; i++) {
+            var it = list[i];
+            parts.push(
+                '<div class="random-history-item">' +
+                '<div class="rh-info">' +
+                '<span class="rh-saga-name">📖 ' + escapeHTML(it.sagaName) + '</span>' +
+                '<span class="rh-book-title">' + (it.tome ? 'T' + it.tome + ' — ' : '') + escapeHTML(it.bookTitle) + '</span>' +
+                '</div>' +
+                '<span class="rh-date">' + escapeHTML(it.dateAdded) + '</span>' +
+                '<button class="rh-remove" data-list="' + listName + '" data-id="' + it.id + '" type="button" aria-label="Retirer">🗑</button>' +
+                '</div>'
+            );
         }
-        s.innerHTML = html;
+        container.innerHTML = parts.join('');
+    }
+
+    function removeRandomHistoryItem(listName, id) {
+        if (!randomHistory[listName]) return;
+        randomHistory[listName] = randomHistory[listName].filter(function (item) {
+            return item.id !== id;
+        });
+        saveRandomHistory();
+        updateRandomHistory();
+        showToast('🗑 Retiré de l\'historique');
     }
 
     // ============================================================
@@ -1249,7 +1937,7 @@
         closeModal('ratingExtModal');
     }
 
-    // ============================================================
+     // ============================================================
     //  SAGAS
     // ============================================================
     function renderSagas() {
@@ -1571,7 +2259,7 @@
         btn.textContent = exp ? '📚 Masquer' : '📚 Voir les livres';
     }
 
-     // ============================================================
+    // ============================================================
     //  WISHLIST
     // ============================================================
     function addWishlistItem(e) {
@@ -1998,9 +2686,7 @@
             if (user) {
                 state.currentUser = user;
                 showLoggedUI(user);
-                // Fusion auto à la connexion (sans confirmation)
                 firebasePullData(true);
-                // Démarrer la sync périodique
                 startPeriodicSync();
             } else {
                 state.currentUser = null;
@@ -2100,48 +2786,35 @@
         var merged = {};
         var deletedMap = {};
 
-        // Map des suppressions
         for (var d = 0; d < deletedList.length; d++) {
             deletedMap[deletedList[d].id] = deletedList[d].deletedAt;
         }
 
-        // Items locaux (sauf ceux supprimés)
         for (var i = 0; i < localArr.length; i++) {
             var item = localArr[i];
-            if (!deletedMap[item.id]) {
-                merged[item.id] = item;
-            }
+            if (!deletedMap[item.id]) merged[item.id] = item;
         }
 
-        // Fusion avec items cloud
         for (var j = 0; j < cloudArr.length; j++) {
             var cItem = cloudArr[j];
 
-            // Si supprimé APRÈS modification cloud → on garde la suppression
-            if (deletedMap[cItem.id] && deletedMap[cItem.id] > (cItem.updatedAt || 0)) {
-                continue;
-            }
+            if (deletedMap[cItem.id] && deletedMap[cItem.id] > (cItem.updatedAt || 0)) continue;
 
             if (!merged[cItem.id]) {
                 merged[cItem.id] = cItem;
                 continue;
             }
 
-            // Version la plus récente gagne
             var localItem = merged[cItem.id];
             var localTime = localItem.updatedAt || 0;
             var cloudTime = cItem.updatedAt || 0;
 
-            if (cloudTime > localTime) {
-                merged[cItem.id] = cItem;
-            }
+            if (cloudTime > localTime) merged[cItem.id] = cItem;
         }
 
         var result = [];
         var keys = Object.keys(merged);
-        for (var k = 0; k < keys.length; k++) {
-            result.push(merged[keys[k]]);
-        }
+        for (var k = 0; k < keys.length; k++) result.push(merged[keys[k]]);
         return result;
     }
 
@@ -2156,7 +2829,6 @@
         }
         var result = [];
         var keys = Object.keys(map);
-        // Nettoyer les suppressions vieilles de + 30 jours
         var cutoff = nowTimestamp() - DELETED_RETENTION_MS;
         for (var k = 0; k < keys.length; k++) {
             if (map[keys[k]].deletedAt > cutoff) result.push(map[keys[k]]);
@@ -2183,6 +2855,28 @@
         return merged;
     }
 
+    // Fusionner l'historique du tirage (union des items par id)
+    function mergeRandomHistory(localHist, cloudHist) {
+        var result = { newSagas: [], continueSagas: [] };
+        var lists = ['newSagas', 'continueSagas'];
+
+        for (var l = 0; l < lists.length; l++) {
+            var name = lists[l];
+            var map = {};
+            var localList = (localHist && localHist[name]) || [];
+            var cloudList = (cloudHist && cloudHist[name]) || [];
+
+            for (var i = 0; i < localList.length; i++) map[localList[i].id] = localList[i];
+            for (var j = 0; j < cloudList.length; j++) {
+                if (!map[cloudList[j].id]) map[cloudList[j].id] = cloudList[j];
+            }
+
+            var keys = Object.keys(map);
+            for (var k = 0; k < keys.length; k++) result[name].push(map[keys[k]]);
+        }
+        return result;
+    }
+
     // ============================================================
     //  SYNC — PUSH (envoi local → cloud avec fusion)
     // ============================================================
@@ -2200,11 +2894,11 @@
             .then(function (docSnap) {
                 var cloudData = docSnap.exists() ? docSnap.data() : {};
 
-                // Fusionner
                 var mergedBooks = mergeArrays(books, cloudData.books || [], deletedItems.books);
                 var mergedWishlist = mergeArrays(wishlist, cloudData.wishlist || [], deletedItems.wishlist);
                 var mergedExternal = mergeArrays(external, cloudData.external || [], deletedItems.external);
                 var mergedSagas = mergeSagasMeta(sagasMeta, cloudData.sagasMeta);
+                var mergedRandomHistory = mergeRandomHistory(randomHistory, cloudData.randomHistory);
 
                 var cloudDeleted = cloudData.deletedItems || { books: [], wishlist: [], external: [] };
                 var mergedDeleted = {
@@ -2213,26 +2907,27 @@
                     external: mergeDeleted(deletedItems.external, cloudDeleted.external || [])
                 };
 
-                // Mettre à jour le local
                 books = mergedBooks;
                 wishlist = mergedWishlist;
                 external = mergedExternal;
                 sagasMeta = mergedSagas;
                 deletedItems = mergedDeleted;
+                randomHistory = mergedRandomHistory;
 
                 saveJSON('myBookPile', books);
                 saveJSON('myBookWishlist', wishlist);
                 saveJSON('myBookExternal', external);
                 saveJSON('myBookSagasMeta', sagasMeta);
+                saveJSON('myBookRandomHistory', randomHistory);
                 saveDeleted();
 
-                // Envoyer au cloud
                 var data = {
                     books: mergedBooks,
                     wishlist: mergedWishlist,
                     external: mergedExternal,
                     sagasMeta: mergedSagas,
                     deletedItems: mergedDeleted,
+                    randomHistory: mergedRandomHistory,
                     settings: settings,
                     lastSync: nowTimestamp(),
                     device: navigator.userAgent.substring(0, 100)
@@ -2256,7 +2951,7 @@
     }
 
     // ============================================================
-    //  PULL — Récupération manuelle ou à la connexion
+    //  PULL — Récupération (manuelle ou à la connexion)
     // ============================================================
     function firebasePullData(isInitial) {
         if (!state.currentUser) return;
@@ -2275,7 +2970,6 @@
                 var cloudData = docSnap.data();
 
                 if (!isInitial) {
-                    // Pull manuel : demander confirmation
                     var msg = '⚠️ Récupérer et fusionner avec le cloud ?\n\n' +
                               '• Cloud : ' + (cloudData.books || []).length + ' livres, ' +
                               (cloudData.wishlist || []).length + ' wishlist, ' +
@@ -2290,11 +2984,11 @@
                     }
                 }
 
-                // Fusion (auto à la connexion, ou après confirmation)
                 books = mergeArrays(books, cloudData.books || [], deletedItems.books);
                 wishlist = mergeArrays(wishlist, cloudData.wishlist || [], deletedItems.wishlist);
                 external = mergeArrays(external, cloudData.external || [], deletedItems.external);
                 sagasMeta = mergeSagasMeta(sagasMeta, cloudData.sagasMeta);
+                randomHistory = mergeRandomHistory(randomHistory, cloudData.randomHistory);
 
                 var cd = cloudData.deletedItems || { books: [], wishlist: [], external: [] };
                 deletedItems = {
@@ -2312,6 +3006,7 @@
                 saveJSON('myBookWishlist', wishlist);
                 saveJSON('myBookExternal', external);
                 saveJSON('myBookSagasMeta', sagasMeta);
+                saveJSON('myBookRandomHistory', randomHistory);
                 saveDeleted();
                 saveSettings();
 
@@ -2324,7 +3019,6 @@
                     showToast('⬇️ Fusionné avec succès !');
                 }
 
-                // Renvoyer la fusion au cloud pour synchroniser les 2 côtés
                 setTimeout(function () { firebaseSync(true); }, 500);
             })
             .catch(function (err) {
@@ -2372,7 +3066,6 @@
                     var lastSynced = parseInt(localStorage.getItem('lastSyncedAt') || '0');
 
                     if ((cloudData.lastSync || 0) > lastSynced) {
-                        // Cloud modifié depuis notre dernier sync → fusionner
                         firebaseSync(true);
                     }
                 })
