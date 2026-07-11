@@ -1,6 +1,5 @@
 /* ============================================================
-   MA PILE À LIVRES — STYLES v11.3
-   Optimisé : variables, structure claire, responsive
+   MA PILE À LIVRES — STYLES v11.8
    ============================================================ */
 
 /* ============================================================
@@ -531,7 +530,111 @@ section h2 {
 .btn-danger:hover { background: rgba(245, 87, 108, .3); }
 
 /* ============================================================
-   SECTION RANDOM
+   SCANNER — Boutons scan
+   ============================================================ */
+.scan-quick-access {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(102, 126, 234, .08);
+    border: 1px solid rgba(102, 126, 234, .2);
+    border-radius: var(--radius-md);
+}
+
+.scan-hint-text {
+    font-size: .8rem;
+    color: var(--color-muted);
+    text-align: center;
+    font-style: italic;
+}
+
+.btn-scan {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    width: 100%;
+}
+
+.btn-scan-photo {
+    background: linear-gradient(135deg, #f5576c, #f093fb);
+    color: #fff;
+    width: 100%;
+}
+
+/* Scanner container */
+.scanner-container {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    background: #000;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    margin: 15px auto;
+}
+
+.scanner-container video,
+.scanner-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
+.scanner-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: var(--color-danger);
+    box-shadow: 0 0 15px var(--color-danger);
+    animation: scanLine 2s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanLine {
+    0%, 100% { top: 30%; opacity: .8; }
+    50%      { top: 70%; opacity: 1; }
+}
+
+@keyframes focusPulse {
+    0%   { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.scanner-hint {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .9rem;
+    margin: 15px 0;
+    min-height: 20px;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+}
+
+.scanner-hint.success {
+    color: var(--success-1);
+    font-weight: 600;
+    background: rgba(67, 233, 123, .1);
+}
+
+.scanner-hint.error {
+    color: var(--color-warning);
+    background: rgba(239, 83, 80, .1);
+}
+
+.scanner-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   TIRAGE ALÉATOIRE — MODES ET HISTORIQUE
    ============================================================ */
 .random-section { text-align: center; }
 .random-section > p {
@@ -539,23 +642,38 @@ section h2 {
     margin-bottom: 15px;
 }
 
-.random-filter {
-    margin-bottom: 20px;
+.random-mode-selector {
     display: flex;
-    align-items: center;
     justify-content: center;
     gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
-.random-filter label { color: var(--color-muted); font-size: .9rem; }
-.random-filter select {
-    padding: 8px 15px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255, 255, 255, .15);
+
+.random-mode-btn {
+    padding: 10px 20px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background: var(--glass-bg);
+    color: #ccc;
+    font-family: 'Poppins', sans-serif;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.random-mode-btn:hover {
     background: var(--glass-hover);
     color: var(--color-white);
-    font-family: 'Poppins', sans-serif;
+    transform: translateY(-2px);
 }
-.random-filter select option { background: var(--bg-2); }
+
+.random-mode-btn.active {
+    background: linear-gradient(135deg, var(--highlight-1), var(--highlight-2));
+    color: var(--color-white);
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .3);
+}
 
 .random-result { margin-top: 25px; min-height: 50px; }
 
@@ -571,6 +689,111 @@ section h2 {
 .random-card h3 { font-size: 1.3rem; color: var(--card-accent); margin-bottom: 5px; }
 .random-card .author { color: #ccc; font-style: italic; }
 .random-card .genre-tag { display: inline-block; margin-top: 10px; }
+
+/* Historique du tirage */
+.random-history-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.random-history-col {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.random-history-title {
+    font-size: 1rem;
+    color: var(--color-white);
+    margin-bottom: 15px;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.random-history-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.random-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, .03);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--card-accent);
+    transition: background var(--transition);
+    gap: 10px;
+}
+
+.random-history-item:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+.random-history-item .rh-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.random-history-item .rh-saga-name {
+    display: block;
+    color: var(--color-white);
+    font-size: .9rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.random-history-item .rh-book-title {
+    display: block;
+    color: var(--color-muted);
+    font-size: .75rem;
+    font-style: italic;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.random-history-item .rh-date {
+    color: #777;
+    font-size: .7rem;
+    flex-shrink: 0;
+}
+
+.random-history-item .rh-remove {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, .3);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    transition: color var(--transition);
+    flex-shrink: 0;
+}
+
+.random-history-item .rh-remove:hover {
+    color: var(--color-danger);
+}
+
+.random-history-empty {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .85rem;
+    font-style: italic;
+    padding: 20px;
+}
 
 /* ============================================================
    FILTRES & TRI
@@ -1731,6 +1954,12 @@ footer {
 /* ============================================================
    RESPONSIVE — MOBILE
    ============================================================ */
+@media (max-width: 700px) {
+    .random-history-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 600px) {
     header h1    { font-size: 1.6rem; }
     .logo        { font-size: 45px; }
@@ -1749,7 +1978,9 @@ footer {
         padding-right: 15px;
     }
 
-    .random-filter { flex-direction: column; }
+    .random-mode-selector { flex-direction: column; }
+    .random-mode-btn      { width: 100%; }
+
     .btn-random    { font-size: .95rem; padding: 12px 25px; }
 
     .theme-grid,
