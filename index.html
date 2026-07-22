@@ -65,7 +65,6 @@
         <section class="add-section" aria-label="Ajouter un livre">
             <h2>➕ Ajouter un livre</h2>
 
-            <!-- Boutons scanner code-barres -->
             <div class="scan-quick-access">
                 <button type="button" class="btn btn-scan" id="btnScanBarcode">
                     <span aria-hidden="true">📷</span> Scanner en direct
@@ -143,7 +142,7 @@
         </section>
 
         <!-- ============================================================ -->
-        <!--  SECTION TIRAGE ALÉATOIRE (nouvelle version)                 -->
+        <!--  SECTION TIRAGE ALÉATOIRE                                    -->
         <!-- ============================================================ -->
         <section class="random-section" aria-label="Choix aléatoire">
             <h2>🎲 Quel livre lire ?</h2>
@@ -159,26 +158,16 @@
                 <button class="random-mode-btn" data-random-mode="continueSaga" type="button">
                     📚 Continuer une saga
                 </button>
+                <button class="random-mode-btn" data-random-mode="oneShot" type="button">
+                    📕 One Shot
+                </button>
+                <button class="random-mode-btn random-mode-surprise" data-random-mode="surprise" type="button">
+                    🎰 Surprise totale
+                </button>
             </div>
 
             <button class="btn btn-random" id="randomBtn" type="button">🎰 Choisir au hasard</button>
             <div class="random-result" id="randomResult" aria-live="polite"></div>
-        </section>
-
-        <!-- Historique des sagas tirées -->
-        <section class="filter-section" aria-label="Sagas via tirage aléatoire">
-            <h2>🎲 Sagas issues du tirage</h2>
-
-            <div class="random-history-grid">
-                <div class="random-history-col">
-                    <h3 class="random-history-title">✨ Nouvelles sagas commencées</h3>
-                    <div id="randomNewSagasList" class="random-history-list"></div>
-                </div>
-                <div class="random-history-col">
-                    <h3 class="random-history-title">📚 Sagas en cours (tirées)</h3>
-                    <div id="randomContinueSagasList" class="random-history-list"></div>
-                </div>
-            </div>
         </section>
 
         <section class="filter-section" aria-label="Filtres bibliothèque">
@@ -243,7 +232,6 @@
         <section class="add-section" aria-label="Ajouter un livre externe">
             <h2>➕ Ajouter un livre externe</h2>
 
-            <!-- Boutons scanner code-barres -->
             <div class="scan-quick-access">
                 <button type="button" class="btn btn-scan" id="btnScanBarcodeExt">
                     <span aria-hidden="true">📷</span> Scanner en direct
@@ -447,7 +435,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!--  PAGE WISHLIST — LISTE D'ACHATS                               -->
+    <!--  PAGE WISHLIST — LISTE D'ACHATS (sans scanner)                -->
     <!-- ============================================================ -->
     <div class="page" id="page-wishlist">
         <header>
@@ -465,17 +453,6 @@
 
         <section class="add-section" aria-label="Ajouter à la wishlist">
             <h2>➕ Ajouter à la liste d'achats</h2>
-
-            <!-- Boutons scanner code-barres -->
-            <div class="scan-quick-access">
-                <button type="button" class="btn btn-scan" id="btnScanBarcodeWish">
-                    <span aria-hidden="true">📷</span> Scanner en direct
-                </button>
-                <button type="button" class="btn btn-scan-photo" id="btnPhotoScanWish">
-                    <span aria-hidden="true">📸</span> Prendre une photo (iPhone recommandé)
-                </button>
-                <span class="scan-hint-text">💡 Auto-remplit titre, auteur, tome et genre</span>
-            </div>
 
             <form id="addWishlistForm" novalidate>
                 <div class="form-row">
@@ -704,9 +681,9 @@
         <section class="settings-section" aria-label="À propos">
             <h2>ℹ️ À propos</h2>
             <div class="about-card">
-                <p><strong>📚 Ma Pile à Livres</strong> — Version 11.8</p>
+                <p><strong>📚 Ma Pile à Livres</strong> — Version 11.9</p>
                 <p>Fait avec ❤️ — 2025</p>
-                <p class="about-small">Tirage aléatoire intelligent + Scanner photo + Sync multi-appareils</p>
+                <p class="about-small">Tirage intelligent avec Surprise totale + Scanner photo + Sync multi-appareils</p>
             </div>
         </section>
     </div>
@@ -1045,17 +1022,13 @@
 
     <!-- Footer -->
     <footer>
-        <p>📚 Ma Pile à Livres v11.8 — Fait avec ❤️ — 2025</p>
+        <p>📚 Ma Pile à Livres v11.9 — Fait avec ❤️ — 2025</p>
     </footer>
 
-    <!-- ============================================================ -->
-    <!--  ZXING — SCANNER DE CODE-BARRES                               -->
-    <!-- ============================================================ -->
+    <!-- ZXING — SCANNER DE CODE-BARRES -->
     <script src="https://unpkg.com/@zxing/library@0.21.0/umd/index.min.js"></script>
 
-    <!-- ============================================================ -->
-    <!--  FIREBASE SDK                                                 -->
-    <!-- ============================================================ -->
+    <!-- FIREBASE SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1087,7 +1060,6 @@
         document.dispatchEvent(new Event('firebaseReady'));
     </script>
 
-    <!-- Script principal -->
     <script src="script.js"></script>
 </body>
 </html>
