@@ -1,6 +1,6 @@
 // ============================================================
-//  MA PILE À LIVRES — SCRIPT PRINCIPAL v11.8
-//  Tirage aléatoire intelligent + historique sagas
+//  MA PILE À LIVRES — SCRIPT PRINCIPAL v11.9
+//  Tirage intelligent avec Surprise totale + Scanner photo
 // ============================================================
 
 (function () {
@@ -14,10 +14,6 @@
     var external = loadJSON('myBookExternal', []);
     var sagasMeta = loadJSON('myBookSagasMeta', {});
     var deletedItems = loadJSON('myBookDeleted', { books: [], wishlist: [], external: [] });
-    var randomHistory = loadJSON('myBookRandomHistory', {
-        newSagas: [],
-        continueSagas: []
-    });
     var settings = loadJSON('myBookPileSettings', {
         theme: 'purple', particles: true, animations: true, font: 'Poppins'
     });
@@ -148,7 +144,6 @@
     function saveSagasMeta() { saveJSON('myBookSagasMeta', sagasMeta); triggerAutoSync(); }
     function saveSettings() { saveJSON('myBookPileSettings', settings); }
     function saveDeleted() { saveJSON('myBookDeleted', deletedItems); }
-    function saveRandomHistory() { saveJSON('myBookRandomHistory', randomHistory); triggerAutoSync(); }
 
     // ============================================================
     //  INITIALISATION
@@ -167,7 +162,6 @@
         renderAuthors();
         renderWishlist();
         updateStats();
-        updateRandomHistory();
         updateSeriesSuggestions();
         updateWishSeriesSuggestions();
     }
@@ -197,13 +191,6 @@
         // Modes de tirage aléatoire
         delegateClick(document.body, '.random-mode-btn[data-random-mode]', function (btn) {
             setRandomMode(btn.getAttribute('data-random-mode'), btn);
-        });
-
-        // Suppression d'un item historique
-        delegateClick(document.body, '.rh-remove', function (btn) {
-            var listType = btn.getAttribute('data-list');
-            var id = parseInt(btn.getAttribute('data-id'));
-            removeRandomHistoryItem(listType, id);
         });
 
         // Thèmes & polices
@@ -253,18 +240,16 @@
         bindClick('closeEditWishModal', function () { closeModal('editWishModal'); state.editWishId = null; });
         bindClick('closeEditExtModal', function () { closeModal('editExtModal'); state.editExtId = null; });
 
-        // 📷 SCANNER EN DIRECT
+        // 📷 SCANNER EN DIRECT (biblio + external, PAS wishlist)
         bindClick('btnScanBarcode', function () { openScanner('book'); });
         bindClick('btnScanBarcodeExt', function () { openScanner('ext'); });
-        bindClick('btnScanBarcodeWish', function () { openScanner('wish'); });
         bindClick('closeScanModal', closeScanner);
         bindClick('btnCancelScan', closeScanner);
         bindClick('btnManualISBN', askManualISBN);
 
-        // 📸 SCANNER PAR PHOTO
+        // 📸 SCANNER PAR PHOTO (biblio + external, PAS wishlist)
         bindClick('btnPhotoScan', function () { openPhotoScan('book'); });
         bindClick('btnPhotoScanExt', function () { openPhotoScan('ext'); });
-        bindClick('btnPhotoScanWish', function () { openPhotoScan('wish'); });
 
         var photoInput = $('photoScanInput');
         if (photoInput) {
@@ -786,16 +771,12 @@
     }
 
     function getTargetInput(field) {
-        var prefix = state.scannerTarget === 'ext' ? 'ext'
-                   : state.scannerTarget === 'wish' ? 'wish'
-                   : 'book';
+        var prefix = state.scannerTarget === 'ext' ? 'ext' : 'book';
         return $(prefix + field);
     }
 
     function fillScannedBook(data) {
-        var prefix = state.scannerTarget === 'ext' ? 'ext'
-                   : state.scannerTarget === 'wish' ? 'wish'
-                   : 'book';
+        var prefix = state.scannerTarget === 'ext' ? 'ext' : 'book';
 
         var fullTitle = data.title;
         if (data.subtitle) fullTitle += ' - ' + data.subtitle;
@@ -813,9 +794,7 @@
             setFormVal(prefix + 'Series', parsed.series);
         }
 
-        var formId = prefix === 'book' ? 'addBookForm'
-                   : prefix === 'ext'  ? 'addExtForm'
-                   : 'addWishlistForm';
+        var formId = prefix === 'book' ? 'addBookForm' : 'addExtForm';
         var form = $(formId);
         if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -833,7 +812,6 @@
 
         console.log('🔍 Parsing:', original);
 
-        // Patterns tome
         var tomePatterns = [
             /[\s,\-–—:]+tome\s*(\d+)/i,
             /[\s,\-–—:]+t\.\s*(\d+)/i,
@@ -864,7 +842,6 @@
             }
         }
 
-        // Détecter la série
         var seriesPatterns = [
             { sep: ' - ', regex: / - / },
             { sep: ' – ', regex: / – / },
@@ -910,7 +887,8 @@
         };
         return roman[str.toUpperCase()] || null;
     }
-        // ============================================================
+
+     // ============================================================
     //  PARAMÈTRES & THÈMES
     // ============================================================
     function applySettings() {
@@ -997,8 +975,7 @@
     function exportData() {
         var data = {
             books: books, wishlist: wishlist, external: external,
-            sagasMeta: sagasMeta, settings: settings, deletedItems: deletedItems,
-            randomHistory: randomHistory
+            sagasMeta: sagasMeta, settings: settings, deletedItems: deletedItems
         };
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
@@ -1021,7 +998,6 @@
                 if (data.external && Array.isArray(data.external)) { external = data.external; saveJSON('myBookExternal', external); }
                 if (data.sagasMeta && typeof data.sagasMeta === 'object') { sagasMeta = data.sagasMeta; saveJSON('myBookSagasMeta', sagasMeta); }
                 if (data.deletedItems && typeof data.deletedItems === 'object') { deletedItems = data.deletedItems; saveDeleted(); }
-                if (data.randomHistory && typeof data.randomHistory === 'object') { randomHistory = data.randomHistory; saveJSON('myBookRandomHistory', randomHistory); }
                 if (data.settings && typeof data.settings === 'object') {
                     settings = Object.assign({}, settings, data.settings);
                     saveSettings();
@@ -1043,12 +1019,10 @@
         if (!confirm('⚠️ Tout supprimer localement ? Le cloud restera intact tant que tu ne synchronises pas.')) return;
         books = []; wishlist = []; external = []; sagasMeta = {};
         deletedItems = { books: [], wishlist: [], external: [] };
-        randomHistory = { newSagas: [], continueSagas: [] };
         saveJSON('myBookPile', []);
         saveJSON('myBookWishlist', []);
         saveJSON('myBookExternal', []);
         saveJSON('myBookSagasMeta', {});
-        saveJSON('myBookRandomHistory', randomHistory);
         saveDeleted();
         renderAll();
         showToast('🗑️ Tout supprimé localement.');
@@ -1519,43 +1493,22 @@
 
     function pickRandomBook() {
         var mode = state.randomMode;
-        var cands = [];
+        var effectiveMode = mode;
+        var isSurprise = (mode === 'surprise');
 
-        if (mode === 'all') {
-            // Tous les livres à lire
-            cands = books.filter(function (b) { return b.status === 'toRead'; });
-        } else if (mode === 'newSaga') {
-            // Livres d'une saga jamais commencée
-            var allSeries = getAllSeries();
-            var seriesKeys = Object.keys(allSeries);
-            var notStartedSeries = seriesKeys.filter(function (k) {
-                return !allSeries[k].isStarted;
-            });
-
-            for (var i = 0; i < books.length; i++) {
-                if (books[i].status !== 'toRead') continue;
-                if (!books[i].series) continue;
-                var key = getSeriesKey(books[i].series);
-                if (notStartedSeries.indexOf(key) !== -1) {
-                    cands.push(books[i]);
-                }
+        // Mode "Surprise totale" : choisit aléatoirement un des 3 modes possibles
+        if (isSurprise) {
+            var availableModes = getAvailableModesForSurprise();
+            if (availableModes.length === 0) {
+                var rdEmpty = $('randomResult');
+                if (rdEmpty) rdEmpty.innerHTML = '<div class="random-card"><h3>😅 Rien à tirer au sort !</h3><p style="color:#aaa;margin-top:8px">Ajoute des livres à ta pile pour utiliser la surprise totale.</p></div>';
+                return;
             }
-        } else if (mode === 'continueSaga') {
-            // Livres d'une saga déjà commencée mais pas terminée
-            var allSeries2 = getAllSeries();
-            var inProgressSeries = Object.keys(allSeries2).filter(function (k) {
-                return allSeries2[k].isStarted && !allSeries2[k].isCompleted;
-            });
-
-            for (var j = 0; j < books.length; j++) {
-                if (books[j].status !== 'toRead') continue;
-                if (!books[j].series) continue;
-                var key2 = getSeriesKey(books[j].series);
-                if (inProgressSeries.indexOf(key2) !== -1) {
-                    cands.push(books[j]);
-                }
-            }
+            effectiveMode = availableModes[Math.floor(Math.random() * availableModes.length)];
+            console.log('🎰 Mode surprise → tiré:', effectiveMode);
         }
+
+        var cands = getCandidatesForMode(effectiveMode);
 
         var rd = $('randomResult');
         var btn = $('randomBtn');
@@ -1563,10 +1516,12 @@
 
         if (!cands.length) {
             var msg;
-            if (mode === 'newSaga') {
-                msg = '😅 Aucune nouvelle saga à commencer ! Ajoute des sagas avec des tomes non lus.';
-            } else if (mode === 'continueSaga') {
+            if (effectiveMode === 'newSaga') {
+                msg = '😅 Aucune nouvelle saga à commencer !';
+            } else if (effectiveMode === 'continueSaga') {
                 msg = '😅 Aucune saga en cours à continuer !';
+            } else if (effectiveMode === 'oneShot') {
+                msg = '😅 Aucun one shot à lire !';
             } else {
                 msg = '😅 Aucun livre à lire !';
             }
@@ -1586,8 +1541,21 @@
             if (spins >= 15) {
                 clearInterval(iv);
                 var ch = cands[Math.floor(Math.random() * cands.length)];
+
+                // Badge du mode (surtout utile pour "Surprise totale")
+                var modeBadge = '';
+                if (isSurprise) {
+                    var modeLabels = {
+                        'newSaga': '✨ Nouvelle saga',
+                        'continueSaga': '📚 Continuer une saga',
+                        'oneShot': '📕 One Shot'
+                    };
+                    modeBadge = '<span class="random-mode-badge">🎰 ' + (modeLabels[effectiveMode] || 'Surprise') + '</span><br>';
+                }
+
                 rd.innerHTML =
                     '<div class="random-card">' +
+                    modeBadge +
                     '<h3>🎉 ' + escapeHTML(ch.title) + '</h3>' +
                     '<p class="author">par ' + escapeHTML(ch.author) + '</p>' +
                     '<span class="genre-tag">' + escapeHTML(ch.genre) + '</span>' +
@@ -1596,89 +1564,54 @@
                 btn.disabled = false;
                 btn.textContent = '🎰 Choisir au hasard';
                 showToast('🎲 "' + ch.title + '" choisi !');
-
-                // Enregistrer dans l'historique si c'est une saga
-                if (ch.series && (mode === 'newSaga' || mode === 'continueSaga')) {
-                    addToRandomHistory(mode, ch);
-                }
             }
         }, 100);
     }
 
-    function addToRandomHistory(mode, book) {
-        var listName = mode === 'newSaga' ? 'newSagas' : 'continueSagas';
-        var list = randomHistory[listName];
-
-        // Éviter doublons (même livre)
-        var exists = list.some(function (item) {
-            return item.bookId === book.id;
-        });
-        if (exists) return;
-
-        list.push({
-            id: nowTimestamp(),
-            bookId: book.id,
-            sagaName: book.series,
-            bookTitle: book.title,
-            tome: book.tome,
-            dateAdded: nowDateStr()
-        });
-
-        saveRandomHistory();
-        updateRandomHistory();
-        showToast('📌 Ajouté à l\'historique !');
-    }
-
-    function updateRandomHistory() {
-        renderRandomHistoryList('newSagas', 'randomNewSagasList');
-        renderRandomHistoryList('continueSagas', 'randomContinueSagasList');
-    }
-
-    function renderRandomHistoryList(listName, containerId) {
-        var container = $(containerId);
-        if (!container) return;
-
-        var list = randomHistory[listName] || [];
-
-        // Nettoyer les items qui ne pointent plus vers des livres existants
-        list = list.filter(function (item) {
-            return findById(books, item.bookId) !== null;
-        });
-        randomHistory[listName] = list;
-
-        if (!list.length) {
-            container.innerHTML = '<p class="random-history-empty">Aucune saga pour le moment. Utilise le tirage aléatoire !</p>';
-            return;
+    // Retourne les candidats selon le mode
+    function getCandidatesForMode(mode) {
+        if (mode === 'all') {
+            return books.filter(function (b) { return b.status === 'toRead'; });
         }
 
-        // Trier par date d'ajout descendante (plus récent en premier)
-        list.sort(function (a, b) { return b.id - a.id; });
-
-        var parts = [];
-        for (var i = 0; i < list.length; i++) {
-            var it = list[i];
-            parts.push(
-                '<div class="random-history-item">' +
-                '<div class="rh-info">' +
-                '<span class="rh-saga-name">📖 ' + escapeHTML(it.sagaName) + '</span>' +
-                '<span class="rh-book-title">' + (it.tome ? 'T' + it.tome + ' — ' : '') + escapeHTML(it.bookTitle) + '</span>' +
-                '</div>' +
-                '<span class="rh-date">' + escapeHTML(it.dateAdded) + '</span>' +
-                '<button class="rh-remove" data-list="' + listName + '" data-id="' + it.id + '" type="button" aria-label="Retirer">🗑</button>' +
-                '</div>'
-            );
+        if (mode === 'newSaga') {
+            var allSeries = getAllSeries();
+            var notStartedSeries = Object.keys(allSeries).filter(function (k) {
+                return !allSeries[k].isStarted;
+            });
+            return books.filter(function (b) {
+                if (b.status !== 'toRead' || !b.series) return false;
+                return notStartedSeries.indexOf(getSeriesKey(b.series)) !== -1;
+            });
         }
-        container.innerHTML = parts.join('');
+
+        if (mode === 'continueSaga') {
+            var allSeries2 = getAllSeries();
+            var inProgressSeries = Object.keys(allSeries2).filter(function (k) {
+                return allSeries2[k].isStarted && !allSeries2[k].isCompleted;
+            });
+            return books.filter(function (b) {
+                if (b.status !== 'toRead' || !b.series) return false;
+                return inProgressSeries.indexOf(getSeriesKey(b.series)) !== -1;
+            });
+        }
+
+        if (mode === 'oneShot') {
+            return books.filter(function (b) {
+                return b.status === 'toRead' && (!b.series || !b.series.trim());
+            });
+        }
+
+        return [];
     }
 
-    function removeRandomHistoryItem(listName, id) {
-        if (!randomHistory[listName]) return;
-        randomHistory[listName] = randomHistory[listName].filter(function (item) {
-            return item.id !== id;
-        });
-        saveRandomHistory();
-        updateRandomHistory();
-        showToast('🗑 Retiré de l\'historique');
+    // Retourne les modes disponibles pour la Surprise totale (ceux qui ont au moins 1 livre)
+    function getAvailableModesForSurprise() {
+        var modes = [];
+        if (getCandidatesForMode('newSaga').length > 0) modes.push('newSaga');
+        if (getCandidatesForMode('continueSaga').length > 0) modes.push('continueSaga');
+        if (getCandidatesForMode('oneShot').length > 0) modes.push('oneShot');
+        return modes;
     }
 
     // ============================================================
@@ -2855,28 +2788,6 @@
         return merged;
     }
 
-    // Fusionner l'historique du tirage (union des items par id)
-    function mergeRandomHistory(localHist, cloudHist) {
-        var result = { newSagas: [], continueSagas: [] };
-        var lists = ['newSagas', 'continueSagas'];
-
-        for (var l = 0; l < lists.length; l++) {
-            var name = lists[l];
-            var map = {};
-            var localList = (localHist && localHist[name]) || [];
-            var cloudList = (cloudHist && cloudHist[name]) || [];
-
-            for (var i = 0; i < localList.length; i++) map[localList[i].id] = localList[i];
-            for (var j = 0; j < cloudList.length; j++) {
-                if (!map[cloudList[j].id]) map[cloudList[j].id] = cloudList[j];
-            }
-
-            var keys = Object.keys(map);
-            for (var k = 0; k < keys.length; k++) result[name].push(map[keys[k]]);
-        }
-        return result;
-    }
-
     // ============================================================
     //  SYNC — PUSH (envoi local → cloud avec fusion)
     // ============================================================
@@ -2898,7 +2809,6 @@
                 var mergedWishlist = mergeArrays(wishlist, cloudData.wishlist || [], deletedItems.wishlist);
                 var mergedExternal = mergeArrays(external, cloudData.external || [], deletedItems.external);
                 var mergedSagas = mergeSagasMeta(sagasMeta, cloudData.sagasMeta);
-                var mergedRandomHistory = mergeRandomHistory(randomHistory, cloudData.randomHistory);
 
                 var cloudDeleted = cloudData.deletedItems || { books: [], wishlist: [], external: [] };
                 var mergedDeleted = {
@@ -2912,13 +2822,11 @@
                 external = mergedExternal;
                 sagasMeta = mergedSagas;
                 deletedItems = mergedDeleted;
-                randomHistory = mergedRandomHistory;
 
                 saveJSON('myBookPile', books);
                 saveJSON('myBookWishlist', wishlist);
                 saveJSON('myBookExternal', external);
                 saveJSON('myBookSagasMeta', sagasMeta);
-                saveJSON('myBookRandomHistory', randomHistory);
                 saveDeleted();
 
                 var data = {
@@ -2927,7 +2835,6 @@
                     external: mergedExternal,
                     sagasMeta: mergedSagas,
                     deletedItems: mergedDeleted,
-                    randomHistory: mergedRandomHistory,
                     settings: settings,
                     lastSync: nowTimestamp(),
                     device: navigator.userAgent.substring(0, 100)
@@ -2988,7 +2895,6 @@
                 wishlist = mergeArrays(wishlist, cloudData.wishlist || [], deletedItems.wishlist);
                 external = mergeArrays(external, cloudData.external || [], deletedItems.external);
                 sagasMeta = mergeSagasMeta(sagasMeta, cloudData.sagasMeta);
-                randomHistory = mergeRandomHistory(randomHistory, cloudData.randomHistory);
 
                 var cd = cloudData.deletedItems || { books: [], wishlist: [], external: [] };
                 deletedItems = {
@@ -3006,7 +2912,6 @@
                 saveJSON('myBookWishlist', wishlist);
                 saveJSON('myBookExternal', external);
                 saveJSON('myBookSagasMeta', sagasMeta);
-                saveJSON('myBookRandomHistory', randomHistory);
                 saveDeleted();
                 saveSettings();
 
